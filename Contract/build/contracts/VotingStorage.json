@@ -1774,7 +1774,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.16",
-  "updatedAt": "2026-01-18T15:18:10.397Z",
+  "updatedAt": "2026-01-19T03:01:28.319Z",
   "devdoc": {
     "details": "Base contract containing all storage variables, structs, and events",
     "kind": "dev",

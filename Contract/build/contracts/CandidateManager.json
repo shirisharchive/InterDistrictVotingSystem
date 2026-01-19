@@ -3111,7 +3111,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.16",
-  "updatedAt": "2026-01-18T15:18:10.373Z",
+  "updatedAt": "2026-01-19T03:01:28.297Z",
   "devdoc": {
     "details": "Manages candidate registration and retrieval operations",
     "kind": "dev",

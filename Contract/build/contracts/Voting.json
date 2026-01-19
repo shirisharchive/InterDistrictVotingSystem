@@ -17267,12 +17267,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0x859663621e06649aFeAf06d9897c25fd582517b8",
-      "transactionHash": "0xaba388724d4e6fda2aca75563725913320237c2d8047f2139641f0489cb2bff6"
+      "address": "0x9De7626a3b8210eB127580F5509Dbb3f8fED530E",
+      "transactionHash": "0x4ed3076222d3e7be769802c773d9fa4dfcd3bc6b3ff8cb62c83c75287133511e"
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2026-01-18T15:18:14.373Z",
+  "updatedAt": "2026-01-19T03:01:33.276Z",
   "networkType": "ethereum",
   "devdoc": {
     "details": "Main voting contract - streamlined for essential functionality",

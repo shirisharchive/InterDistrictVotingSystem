@@ -212,7 +212,55 @@
       let hasVotedForCandidate = false;
       let sessionTimer = null;
       let isVotingComplete = false;
+      let beepContext = null;
       const SESSION_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+      // Play a short triple beep for blocked repeat voting attempts
+      function playTripleBeep() {
+        if (!beepContext) {
+          beepContext = new (
+            window.AudioContext || window.webkitAudioContext
+          )();
+        }
+
+        if (beepContext.state === "suspended") {
+          beepContext.resume();
+        }
+
+        const duration = 0.15;
+        const gap = 0.1;
+        const frequency = 880;
+        const startTime = beepContext.currentTime;
+
+        for (let i = 0; i < 3; i++) {
+          const oscillator = beepContext.createOscillator();
+          const gainNode = beepContext.createGain();
+          oscillator.type = "sine";
+          oscillator.frequency.value = frequency;
+          oscillator.connect(gainNode);
+          gainNode.connect(beepContext.destination);
+
+          const begin = startTime + i * (duration + gap);
+          gainNode.gain.setValueAtTime(0.25, begin);
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, begin + duration);
+
+          oscillator.start(begin);
+          oscillator.stop(begin + duration);
+        }
+      }
+
+      // Handle duplicate-vote attempt with audio cue then logout
+      function handleDuplicateVote() {
+        playTripleBeep();
+        // Allow the triple beep (~0.75s) to finish before redirect
+        setTimeout(() => {
+          if (sessionTimer) {
+            clearInterval(sessionTimer);
+          }
+          sessionStorage.removeItem("voterInfo");
+          window.location.href = "voter-login.html";
+        }, 800);
+      }
 
       // ============================================
       // VOTING SESSION LOCK MECHANISM
@@ -523,10 +571,8 @@
             error.message.toLowerCase().includes("already voted") ||
             error.message.toLowerCase().includes("voter has already voted")
           ) {
-            showAlert(
-              "🚨 CRITICAL VIOLATION: You have already voted but you have visited again in Voting Portal. This is a CRIME! Alert has been sent to Authority regarding your crime. Legal action may be taken against you.",
-              "error",
-            );
+            handleDuplicateVote();
+            return;
           } else {
             showAlert("Error casting vote: " + error.message, "error");
           }
@@ -641,10 +687,8 @@
             error.message.toLowerCase().includes("already voted") ||
             error.message.toLowerCase().includes("voter has already voted")
           ) {
-            showAlert(
-              "🚨 CRITICAL VIOLATION: You have already voted but you have visited again in Voting Portal. This is a CRIME! Alert has been sent to Authority regarding your crime. Legal action may be taken against you.",
-              "error",
-            );
+            handleDuplicateVote();
+            return;
           } else {
             showAlert("Error casting party vote: " + error.message, "error");
           }

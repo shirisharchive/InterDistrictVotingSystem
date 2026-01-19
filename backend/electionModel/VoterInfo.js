@@ -72,7 +72,7 @@ const VoterInfo = sequelize.define(
         name: "unique_voter_id",
       },
     ],
-  }
+  },
 );
 
 // Note: Sequelize doesn't support composite foreign keys directly
