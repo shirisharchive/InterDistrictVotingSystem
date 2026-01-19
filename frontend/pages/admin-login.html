@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login - Voting System</title>
+
+    <link rel="stylesheet" href="../css/style.css" />
+    <style>
+      .admin-login-container {
+        max-width: 500px;
+        margin: 60px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .admin-login-container h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 1.8em;
+      }
+
+      .admin-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .admin-header .icon {
+        font-size: 3em;
+        margin-right: 15px;
+      }
+
+      .admin-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-group label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .form-group input {
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+      }
+
+      .login-btn {
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .login-btn:active {
+        transform: translateY(0);
+      }
+
+      .alert {
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .alert.show {
+        display: block;
+      }
+
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .back-link {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .back-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link a:hover {
+        text-decoration: underline;
+      }
+
+      .loading-spinner {
+        display: none;
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      .loading-spinner::after {
+        content: "";
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .default-creds {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 5px;
+        padding: 12px;
+        margin-top: 15px;
+        font-size: 13px;
+        color: #856404;
+      }
+
+      .default-creds strong {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .default-creds code {
+        background: #fff;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: "Courier New", monospace;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Nepal Flag Background -->
+    <div id="nepal-flag">
+      <div class="outer-triangle-top"></div>
+      <div class="outer-triangle-bottom"></div>
+      <div class="red_flag">
+        <div class="inner-triangle-top"></div>
+        <div class="inner-triangle-bottom"></div>
+      </div>
+      <div id="moon">
+        <div class="shape">
+          <div class="star"></div>
+        </div>
+      </div>
+      <div id="sun"></div>
+    </div>
+
+    <div id="nepal-flag-left">
+      <div class="outer-triangle-top"></div>
+      <div class="outer-triangle-bottom"></div>
+      <div class="red_flag">
+        <div class="inner-triangle-top"></div>
+        <div class="inner-triangle-bottom"></div>
+      </div>
+      <div id="moon">
+        <div class="shape">
+          <div class="star"></div>
+        </div>
+      </div>
+      <div id="sun"></div>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>🛡️ Admin Portal</h1>
+        <p>Secure Administration Panel</p>
+      </header>
+
+      <nav>
+        <a href="../index.html">Home</a>
+      </nav>
+
+      <main>
+        <div class="admin-login-container">
+          <div class="admin-header">
+            <div class="icon">🔐</div>
+            <h2>Admin Login</h2>
+          </div>
+
+          <div id="alert" class="alert"></div>
+
+          <form id="adminLoginForm" class="admin-form">
+            <div class="form-group">
+              <label for="adminEmail">Email Address</label>
+              <input
+                type="email"
+                id="adminEmail"
+                name="adminEmail"
+                placeholder="Enter your admin email"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <button type="submit" class="login-btn">Login</button>
+
+            <div class="loading-spinner" id="loadingSpinner"></div>
+          </form>
+
+          <div class="back-link">
+            <p>Not an admin? <a href="../index.html">Go back home</a></p>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h3>Admin Features</h3>
+          <div class="steps">
+            <div class="step">
+              <span class="step-number">1</span>
+              <p>View district voting results</p>
+            </div>
+            <div class="step">
+              <span class="step-number">2</span>
+              <p>Monitor voting turnout</p>
+            </div>
+            <div class="step">
+              <span class="step-number">3</span>
+              <p>Access real-time analytics</p>
+            </div>
+            <div class="step">
+              <span class="step-number">4</span>
+              <p>Download detailed reports</p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <p>Conceptualized By the Students of Everest Engineering College</p>
+      </footer>
+    </div>
+
+    <script>
+      const API_BASE_URL = "http://localhost:5500/api";
+
+      const adminLoginForm = document.getElementById("adminLoginForm");
+      const alertDiv = document.getElementById("alert");
+      const loadingSpinner = document.getElementById("loadingSpinner");
+
+      adminLoginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const adminEmail = document.getElementById("adminEmail").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        if (!adminEmail || !password) {
+          showAlert("Please fill in all fields", "error");
+          return;
+        }
+
+        try {
+          loadingSpinner.style.display = "block";
+
+          const response = await fetch(`${API_BASE_URL}/admin/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              adminEmail: adminEmail,
+              password: password,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            showAlert("Login successful! Redirecting...", "success");
+
+            // Store token and admin info
+            localStorage.setItem("adminToken", result.token);
+            localStorage.setItem("adminInfo", JSON.stringify(result.admin));
+
+            // Redirect to admin dashboard
+            setTimeout(() => {
+              window.location.href = "admin-dashboard.html";
+            }, 1500);
+          } else {
+            // Show detailed error message
+            let errorMsg = result.message || "Login failed";
+            if (response.status === 401) {
+              errorMsg =
+                "❌ Invalid email or password. Please check your credentials.";
+            }
+            showAlert(errorMsg, "error");
+          }
+        } catch (error) {
+          showAlert(
+            "❌ Connection error: " +
+              error.message +
+              "\n\nMake sure the server is running on port 5500",
+            "error",
+          );
+        } finally {
+          loadingSpinner.style.display = "none";
+        }
+      });
+
+      function showAlert(message, type) {
+        alertDiv.textContent = message;
+        alertDiv.className = `alert show alert-${type}`;
+
+        if (type === "success") {
+          setTimeout(() => {
+            alertDiv.classList.remove("show");
+          }, 3000);
+        }
+      }
+    </script>
+  </body>
+</html>

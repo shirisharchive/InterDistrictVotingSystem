@@ -1,0 +1,1307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Voting System</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;
+      }
+
+      .admin-dashboard {
+        min-height: 100vh;
+      }
+
+      .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .admin-header h1 {
+        font-size: 1.8em;
+        font-weight: 600;
+      }
+
+      .admin-user-info {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .user-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+      }
+
+      .super-admin-badge {
+        background: #ffd700;
+        color: #333;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 12px;
+      }
+
+      .logout-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid white;
+        padding: 8px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .logout-btn:hover {
+        background: white;
+        color: #667eea;
+      }
+
+      .dashboard-content {
+        max-width: 1400px;
+        margin: 30px auto;
+        padding: 0 30px;
+      }
+
+      /* Super Admin Section */
+      .super-admin-section {
+        display: none;
+        margin-bottom: 30px;
+      }
+
+      .super-admin-section.active {
+        display: block;
+      }
+
+      .action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .action-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+      }
+
+      .action-card h3 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #218838;
+      }
+
+      .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        margin-right: 5px;
+      }
+
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+      }
+
+      /* Admin List */
+      .admin-list {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-top: 20px;
+      }
+
+      .admin-list table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .admin-list th {
+        background: #f8f9fa;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #667eea;
+      }
+
+      .admin-list td {
+        padding: 12px;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .badge-super {
+        background: #ffd700;
+        color: #333;
+      }
+
+      .badge-district {
+        background: #e7f3ff;
+        color: #0056b3;
+      }
+
+      /* Stats Grid */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        text-align: center;
+      }
+
+      .stat-card .icon {
+        font-size: 3em;
+        margin-bottom: 10px;
+      }
+
+      .stat-card .stat-value {
+        font-size: 2.5em;
+        color: #667eea;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      .stat-card .stat-label {
+        color: #666;
+        font-size: 14px;
+        text-transform: uppercase;
+      }
+
+      /* Tabs */
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+      }
+
+      .tab-btn {
+        background: transparent;
+        border: none;
+        padding: 15px 25px;
+        cursor: pointer;
+        font-size: 16px;
+        color: #666;
+        transition: all 0.3s;
+        border-bottom: 3px solid transparent;
+      }
+
+      .tab-btn.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+      }
+
+      .tab-btn:hover {
+        color: #667eea;
+      }
+
+      .tab-content {
+        display: none;
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      /* Results Table */
+      .results-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .results-table th {
+        background: #f8f9fa;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #667eea;
+      }
+
+      .results-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .rank-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 50%;
+        font-weight: bold;
+        display: inline-block;
+        min-width: 30px;
+        text-align: center;
+      }
+
+      .progress-bar {
+        background: #e9ecef;
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-top: 5px;
+      }
+
+      .progress-fill {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100%;
+        transition: width 0.5s ease;
+      }
+
+      /* Alert */
+      .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: none;
+        animation: slideDown 0.3s ease;
+      }
+
+      .alert.show {
+        display: block;
+      }
+
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .alert-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Loading */
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #667eea;
+      }
+
+      .loading::after {
+        content: "...";
+        animation: dots 1.5s infinite;
+      }
+
+      @keyframes dots {
+        0%,
+        20% {
+          content: ".";
+        }
+        40% {
+          content: "..";
+        }
+        60%,
+        100% {
+          content: "...";
+        }
+      }
+
+      /* Registration Buttons */
+      .registration-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .registration-card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        cursor: pointer;
+        transition:
+          transform 0.3s,
+          box-shadow 0.3s;
+      }
+
+      .registration-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .registration-card .icon {
+        font-size: 3.5em;
+        margin-bottom: 15px;
+      }
+
+      .registration-card h3 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .registration-card p {
+        color: #666;
+        font-size: 14px;
+      }
+
+      /* Blockchain Results */
+      .blockchain-results {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin-top: 20px;
+        display: none;
+      }
+
+      .blockchain-results.show {
+        display: block;
+      }
+
+      .blockchain-results h4 {
+        color: #667eea;
+        margin-bottom: 15px;
+      }
+
+      .results-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .summary-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .summary-item .label {
+        color: #666;
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+
+      .summary-item .value {
+        color: #667eea;
+        font-size: 1.8em;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin-dashboard">
+      <!-- Header -->
+      <div class="admin-header">
+        <div>
+          <h1>📊 Admin Dashboard</h1>
+          <div style="font-size: 14px; margin-top: 5px">
+            <span id="districtInfo"></span>
+          </div>
+        </div>
+        <div class="admin-user-info">
+          <div id="superAdminBadge" style="display: none">
+            <span class="super-admin-badge">⭐ SUPER ADMIN</span>
+          </div>
+          <div class="user-badge">
+            <span id="adminName">Admin</span>
+          </div>
+          <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+
+      <div class="dashboard-content">
+        <!-- Alert -->
+        <div id="alert" class="alert"></div>
+
+        <!-- Super Admin Section -->
+        <div id="superAdminSection" class="super-admin-section">
+          <h2 style="color: #667eea; margin-bottom: 20px">
+            🔧 Super Admin Controls
+          </h2>
+
+          <div class="action-grid">
+            <!-- Create Admin -->
+            <div class="action-card">
+              <h3>➕ Create New Admin</h3>
+              <form id="createAdminForm" onsubmit="createAdmin(event)">
+                <div class="form-group">
+                  <label>Admin Name</label>
+                  <input
+                    type="text"
+                    id="newAdminName"
+                    required
+                    placeholder="Enter admin name"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    id="newAdminEmail"
+                    required
+                    placeholder="admin@example.com"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Password</label>
+                  <input
+                    type="password"
+                    id="newAdminPassword"
+                    required
+                    placeholder="Enter password"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Admin Type</label>
+                  <select id="newAdminType" onchange="toggleDistrictFields()">
+                    <option value="super">Super Admin</option>
+                    <option value="district">District Admin</option>
+                  </select>
+                </div>
+                <div id="districtFields" style="display: none">
+                  <div class="form-group">
+                    <label>District Name</label>
+                    <input
+                      type="text"
+                      id="newAdminDistrict"
+                      placeholder="e.g., Kathmandu, Lalitpur, Pokhara"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Area Number</label>
+                    <input
+                      type="number"
+                      id="newAdminArea"
+                      placeholder="e.g., 1"
+                      min="1"
+                    />
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Create Admin
+                </button>
+              </form>
+            </div>
+
+            <!-- Fetch Blockchain Data -->
+            <div class="action-card">
+              <h3>⛓️ Fetch Blockchain Data</h3>
+              <form id="blockchainForm" onsubmit="fetchBlockchainData(event)">
+                <div class="form-group">
+                  <label>Contract Address</label>
+                  <input
+                    type="text"
+                    id="contractAddress"
+                    required
+                    placeholder="0x..."
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Filter by District (Optional)</label>
+                  <input
+                    type="text"
+                    id="filterDistrict"
+                    placeholder="Leave empty for all districts"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Filter by Area (Optional)</label>
+                  <input
+                    type="number"
+                    id="filterArea"
+                    placeholder="Leave empty for all"
+                  />
+                </div>
+                <button type="submit" class="btn btn-success">
+                  Fetch Data
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Admin List -->
+          <div class="admin-list">
+            <h3 style="color: #667eea; margin-bottom: 15px">
+              👥 Registered Admins
+            </h3>
+            <button
+              class="btn btn-secondary"
+              onclick="loadAdminsList()"
+              style="margin-bottom: 15px"
+            >
+              🔄 Refresh List
+            </button>
+            <div id="adminListContainer">
+              <div class="loading">Loading admins</div>
+            </div>
+          </div>
+
+          <!-- Blockchain Results -->
+          <div id="blockchainResults" class="blockchain-results">
+            <h4>⛓️ Blockchain Data</h4>
+            <div class="results-summary" id="blockchainSummary"></div>
+            <div id="blockchainDetails"></div>
+          </div>
+        </div>
+
+        <!-- Registration Section (Available to all admins) -->
+        <div class="registration-section">
+          <div
+            class="registration-card"
+            onclick="window.location.href = 'admin.html?tab=register-voter'"
+          >
+            <div class="icon">👤</div>
+            <h3>Register Voter</h3>
+            <p>Register voters from any district</p>
+          </div>
+          <div
+            class="registration-card"
+            onclick="window.location.href = 'admin.html?tab=register-candidate'"
+          >
+            <div class="icon">🎯</div>
+            <h3>Register Candidate</h3>
+            <p id="candidateRestriction">Register candidates</p>
+          </div>
+          <div
+            class="registration-card"
+            onclick="window.location.href = 'admin.html?tab=register-party'"
+          >
+            <div class="icon">🏛️</div>
+            <h3>Register Party</h3>
+            <p>Register political parties</p>
+          </div>
+          <div
+            class="registration-card"
+            onclick="window.location.href = 'results.html'"
+          >
+            <div class="icon">📊</div>
+            <h3>View Results</h3>
+            <p>View election results in real-time</p>
+          </div>
+        </div>
+
+        <!-- Results Tabs -->
+        <div class="tabs">
+          <button
+            class="tab-btn active"
+            onclick="switchTab('candidates', event)"
+          >
+            🎯 Candidate Results
+          </button>
+          <button class="tab-btn" onclick="switchTab('parties', event)">
+            🏛️ Party Results
+          </button>
+        </div>
+
+        <!-- Candidate Results -->
+        <div id="candidates" class="tab-content active">
+          <h3 style="color: #667eea; margin-bottom: 20px">
+            🎯 Candidate Vote Results
+          </h3>
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Candidate Name</th>
+                <th>Party</th>
+                <th>Votes</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody id="candidatesBody">
+              <tr>
+                <td colspan="5" class="loading">Loading candidate results</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Party Results -->
+        <div id="parties" class="tab-content">
+          <h3 style="color: #667eea; margin-bottom: 20px">
+            🏛️ Party Vote Results
+          </h3>
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Party Name</th>
+                <th>Votes</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody id="partiesBody">
+              <tr>
+                <td colspan="4" class="loading">Loading party results</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE_URL = "http://localhost:5500/api";
+      let adminToken = null;
+      let adminInfo = null;
+
+      // Initialize dashboard
+      window.addEventListener("load", () => {
+        adminToken = localStorage.getItem("adminToken");
+        const adminInfoStr = localStorage.getItem("adminInfo");
+
+        if (!adminToken || !adminInfoStr) {
+          window.location.href = "admin-login.html";
+          return;
+        }
+
+        adminInfo = JSON.parse(adminInfoStr);
+
+        // Display admin info
+        document.getElementById("adminName").textContent =
+          adminInfo.email || "Admin";
+
+        // Show super admin controls if super admin
+        if (adminInfo.isSuperAdmin) {
+          document.getElementById("superAdminSection").classList.add("active");
+          document.getElementById("superAdminBadge").style.display = "block";
+          document.getElementById("districtInfo").textContent =
+            "All Districts & Areas";
+          loadAdminsList();
+        } else {
+          const districtText = `District ${adminInfo.district || "N/A"}, Area ${adminInfo.area || "N/A"}`;
+          document.getElementById("districtInfo").textContent = districtText;
+          document.getElementById("candidateRestriction").textContent =
+            `Only for ${districtText}`;
+        }
+
+        // Load dashboard data
+        loadCandidateResults();
+        loadPartyResults();
+      });
+
+      function toggleDistrictFields() {
+        const adminType = document.getElementById("newAdminType").value;
+        const districtFields = document.getElementById("districtFields");
+        districtFields.style.display =
+          adminType === "district" ? "block" : "none";
+      }
+
+      async function createAdmin(event) {
+        event.preventDefault();
+
+        const name = document.getElementById("newAdminName").value;
+        const email = document.getElementById("newAdminEmail").value;
+        const password = document.getElementById("newAdminPassword").value;
+        const isSuperAdmin =
+          document.getElementById("newAdminType").value === "super";
+        const district = document.getElementById("newAdminDistrict").value;
+        const area = document.getElementById("newAdminArea").value;
+
+        if (!isSuperAdmin && (!district || !area)) {
+          showAlert(
+            "District Name and Area are required for District Admin",
+            "error",
+          );
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/admin/admins/create`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${adminToken}`,
+            },
+            body: JSON.stringify({
+              name,
+              email,
+              password,
+              isSuperAdmin,
+              district: isSuperAdmin ? null : district,
+              area: isSuperAdmin ? null : parseInt(area),
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            showAlert(
+              `Admin created successfully! ID: ${result.data.adminId}`,
+              "success",
+            );
+            document.getElementById("createAdminForm").reset();
+            toggleDistrictFields();
+            loadAdminsList();
+          } else {
+            showAlert(result.message || "Error creating admin", "error");
+          }
+        } catch (error) {
+          console.error("Create admin error:", error);
+          showAlert("Error creating admin", "error");
+        }
+      }
+
+      async function loadAdminsList() {
+        const container = document.getElementById("adminListContainer");
+        container.innerHTML = '<div class="loading">Loading admins</div>';
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/admin/admins`, {
+            headers: {
+              Authorization: `Bearer ${adminToken}`,
+            },
+          });
+
+          const result = await response.json();
+
+          if (result.success && result.data.length > 0) {
+            const admins = result.data;
+            container.innerHTML = `
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Type</th>
+                    <th>District</th>
+                    <th>Area</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${admins
+                    .map(
+                      (admin) => `
+                    <tr>
+                      <td>${admin.id}</td>
+                      <td>${admin.name || "N/A"}</td>
+                      <td>${admin.email}</td>
+                      <td>
+                        ${
+                          admin.isSuperAdmin
+                            ? '<span class="badge badge-super">Super Admin</span>'
+                            : '<span class="badge badge-district">District Admin</span>'
+                        }
+                      </td>
+                      <td>${admin.district || "-"}</td>
+                      <td>${admin.area || "-"}</td>
+                      <td>
+                        ${
+                          !admin.isSuperAdmin
+                            ? `
+                          <button class="btn-small btn-primary" onclick="editAdmin(${admin.id}, '${admin.name}', '${admin.district}', '${admin.area}')">
+                            ✏️ Edit
+                          </button>
+                          <button class="btn-small btn-danger" onclick="deleteAdmin(${admin.id}, '${admin.name}')">
+                            🗑️ Delete
+                          </button>
+                        `
+                            : '<span style="color: #999;">-</span>'
+                        }
+                      </td>
+                    </tr>
+                  `,
+                    )
+                    .join("")}
+                </tbody>
+              </table>
+            `;
+          } else {
+            container.innerHTML = "<p>No admins found</p>";
+          }
+        } catch (error) {
+          console.error("Load admins error:", error);
+          container.innerHTML =
+            '<p style="color: red;">Error loading admins</p>';
+        }
+      }
+
+      // Edit admin function
+      async function editAdmin(
+        adminId,
+        currentName,
+        currentDistrict,
+        currentArea,
+      ) {
+        const name = prompt("Edit Admin Name:", currentName);
+        if (!name) return;
+
+        const district = prompt(
+          "Edit District:",
+          currentDistrict === "-" ? "" : currentDistrict,
+        );
+        if (!district) return;
+
+        const area = prompt(
+          "Edit Area Number:",
+          currentArea === "-" ? "" : currentArea,
+        );
+        if (!area) return;
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/admin/admins/${adminId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${adminToken}`,
+              },
+              body: JSON.stringify({ name, district, area: parseInt(area) }),
+            },
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            showAlert("Admin updated successfully!", "success");
+            loadAdminsList();
+          } else {
+            showAlert("Error: " + result.message, "error");
+          }
+        } catch (error) {
+          console.error("Update admin error:", error);
+          showAlert("Error updating admin", "error");
+        }
+      }
+
+      // Delete admin function
+      async function deleteAdmin(adminId, adminName) {
+        if (
+          !confirm(
+            `Are you sure you want to delete admin "${adminName}"? This action cannot be undone.`,
+          )
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/admin/admins/${adminId}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${adminToken}`,
+              },
+            },
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            showAlert("Admin deleted successfully!", "success");
+            loadAdminsList();
+          } else {
+            showAlert("Error: " + result.message, "error");
+          }
+        } catch (error) {
+          console.error("Delete admin error:", error);
+          showAlert("Error deleting admin", "error");
+        }
+      }
+
+      async function fetchBlockchainData(event) {
+        event.preventDefault();
+
+        const contractAddress =
+          document.getElementById("contractAddress").value;
+        const district = document.getElementById("filterDistrict").value;
+        const area = document.getElementById("filterArea").value;
+
+        const resultsDiv = document.getElementById("blockchainResults");
+        resultsDiv.classList.add("show");
+        document.getElementById("blockchainSummary").innerHTML =
+          '<div class="loading">Fetching blockchain data</div>';
+        document.getElementById("blockchainDetails").innerHTML = "";
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/admin/blockchain/fetch`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${adminToken}`,
+              },
+              body: JSON.stringify({
+                contractAddress,
+                district: district || null,
+                area: area ? parseInt(area) : null,
+              }),
+            },
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            const data = result.data;
+
+            // Display summary
+            document.getElementById("blockchainSummary").innerHTML = `
+              <div class="summary-item">
+                <div class="label">Total Candidates</div>
+                <div class="value">${data.candidates.length}</div>
+              </div>
+              <div class="summary-item">
+                <div class="label">Total Parties</div>
+                <div class="value">${data.parties.length}</div>
+              </div>
+              <div class="summary-item">
+                <div class="label">Total Votes Cast</div>
+                <div class="value">${data.totalVotes || 0}</div>
+              </div>
+            `;
+
+            // Display details
+            let details = '<h4 style="margin-top: 20px;">Candidates</h4>';
+            if (data.candidates.length > 0) {
+              details += '<ul style="list-style: none; padding: 0;">';
+              data.candidates.forEach((c) => {
+                details += `<li style="padding: 10px; border-bottom: 1px solid #e9ecef;">
+                  <strong>${c.name}</strong> (${c.party})<br>
+                  Position: ${c.position}<br>
+                  District: ${c.district}, Area: ${c.areaNo}<br>
+                  Vote Count: ${c.voteCount}
+                </li>`;
+              });
+              details += "</ul>";
+            } else {
+              details += "<p>No candidates found</p>";
+            }
+
+            details += '<h4 style="margin-top: 30px;">Parties</h4>';
+            if (data.parties.length > 0) {
+              details += '<ul style="list-style: none; padding: 0;">';
+              data.parties.forEach((p) => {
+                details += `<li style="padding: 10px; border-bottom: 1px solid #e9ecef;">
+                  <strong>${p.name}</strong><br>
+                  District: ${p.district}, Area: ${p.areaNo}<br>
+                  Vote Count: ${p.voteCount}
+                </li>`;
+              });
+              details += "</ul>";
+            } else {
+              details += "<p>No parties found</p>";
+            }
+
+            document.getElementById("blockchainDetails").innerHTML = details;
+            showAlert("Blockchain data fetched successfully!", "success");
+          } else {
+            showAlert(
+              result.message || "Error fetching blockchain data",
+              "error",
+            );
+            resultsDiv.classList.remove("show");
+          }
+        } catch (error) {
+          console.error("Fetch blockchain error:", error);
+          showAlert("Error fetching blockchain data", "error");
+          resultsDiv.classList.remove("show");
+        }
+      }
+
+      async function loadDashboard() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+            headers: {
+              Authorization: `Bearer ${adminToken}`,
+            },
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            const stats = [
+              {
+                label: "Total Voters",
+                value: result.data.totalVoters,
+                icon: "👥",
+              },
+              {
+                label: "Votes Cast",
+                value: result.data.votesCast,
+                icon: "🗳️",
+              },
+              {
+                label: "Voter Turnout",
+                value: result.data.turnout,
+                icon: "📊",
+              },
+            ];
+
+            const statsGrid = document.getElementById("statsGrid");
+            statsGrid.innerHTML = stats
+              .map(
+                (stat) => `
+              <div class="stat-card">
+                <div class="icon">${stat.icon}</div>
+                <div class="stat-value">${stat.value}</div>
+                <div class="stat-label">${stat.label}</div>
+              </div>
+            `,
+              )
+              .join("");
+          } else {
+            showAlert(result.message || "Error loading dashboard", "error");
+          }
+        } catch (error) {
+          console.error("Dashboard error:", error);
+          showAlert("Error loading dashboard data", "error");
+        }
+      }
+
+      async function loadCandidateResults() {
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/admin/results/candidates`,
+            {
+              headers: {
+                Authorization: `Bearer ${adminToken}`,
+              },
+            },
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            const tbody = document.getElementById("candidatesBody");
+            if (result.data.length > 0) {
+              tbody.innerHTML = result.data
+                .map(
+                  (item, index) => `
+                <tr>
+                  <td><span class="rank-badge">${index + 1}</span></td>
+                  <td><strong>${item.candidate_name}</strong></td>
+                  <td>${item.party_name || "Independent"}</td>
+                  <td><strong>${item.vote_count || 0}</strong></td>
+                  <td>
+                    <div>${item.vote_percentage || 0}%</div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: ${item.vote_percentage || 0}%"></div>
+                    </div>
+                  </td>
+                </tr>
+              `,
+                )
+                .join("");
+            } else {
+              tbody.innerHTML =
+                '<tr><td colspan="5" style="text-align: center;">No candidate data available</td></tr>';
+            }
+          } else {
+            console.error("Candidate results error:", result.message);
+            document.getElementById("candidatesBody").innerHTML =
+              `<tr><td colspan="5" style="text-align: center; color: #e74c3c;">${result.message || "Error loading candidate results"}</td></tr>`;
+          }
+        } catch (error) {
+          console.error("Candidate results error:", error);
+          document.getElementById("candidatesBody").innerHTML =
+            '<tr><td colspan="5" style="text-align: center; color: red;">Error loading results</td></tr>';
+        }
+      }
+
+      async function loadPartyResults() {
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/admin/results/parties`,
+            {
+              headers: {
+                Authorization: `Bearer ${adminToken}`,
+              },
+            },
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            const tbody = document.getElementById("partiesBody");
+            if (result.data.length > 0) {
+              tbody.innerHTML = result.data
+                .map(
+                  (item, index) => `
+                <tr>
+                  <td><span class="rank-badge">${index + 1}</span></td>
+                  <td><strong>${item.party_name}</strong></td>
+                  <td><strong>${item.vote_count || 0}</strong></td>
+                  <td>
+                    <div>${item.vote_percentage || 0}%</div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: ${item.vote_percentage || 0}%"></div>
+                    </div>
+                  </td>
+                </tr>
+              `,
+                )
+                .join("");
+            } else {
+              tbody.innerHTML =
+                '<tr><td colspan="4" style="text-align: center;">No party data available</td></tr>';
+            }
+          } else {
+            console.error("Party results error:", result.message);
+            document.getElementById("partiesBody").innerHTML =
+              `<tr><td colspan="4" style="text-align: center; color: #e74c3c;">${result.message || "Error loading party results"}</td></tr>`;
+          }
+        } catch (error) {
+          console.error("Party results error:", error);
+          document.getElementById("partiesBody").innerHTML =
+            '<tr><td colspan="4" style="text-align: center; color: red;">Error loading results</td></tr>';
+        }
+      }
+
+      function switchTab(tabName, event) {
+        // Remove active class from all tabs
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((tab) => tab.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+
+        // Add active class to selected tab
+        document.getElementById(tabName).classList.add("active");
+        event.target.classList.add("active");
+      }
+
+      function showAlert(message, type) {
+        const alert = document.getElementById("alert");
+        alert.textContent = message;
+        alert.className = `alert show alert-${type}`;
+
+        setTimeout(() => {
+          alert.classList.remove("show");
+        }, 5000);
+      }
+
+      function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+          localStorage.removeItem("adminToken");
+          localStorage.removeItem("adminInfo");
+          window.location.href = "admin-login.html";
+        }
+      }
+    </script>
+  </body>
+</html>

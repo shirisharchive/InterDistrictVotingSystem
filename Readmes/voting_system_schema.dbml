@@ -1,0 +1,239 @@
+/* ====== VOTING SYSTEM DATABASE SCHEMA ====== */
+
+/* ====== Election Area Table ====== */
+Table ElectionAreaInfo {
+  District string [not null]
+  AreaNo int [not null]
+
+  Indexes {
+    (District, AreaNo) [pk]
+  }
+}
+
+/* ====== Candidate Table ====== */
+Table CandidateInfo {
+  id int [pk, increment]
+
+  CandidateName string [not null]
+  CandidateParty string [not null]
+  CandidatePosition string [not null]
+  CandidateElectionLogo string [not null]
+  CandidateImage string [not null]
+
+  District string [not null]
+  AreaNo int [not null]
+
+  Indexes {
+    // One party → one position → one candidate per area
+    (CandidateParty, CandidatePosition, District, AreaNo) [unique]
+  }
+}
+
+/* ====== Voter Table ====== */
+Table VoterInfo {
+  id int [pk, increment]
+
+  VoterName string [not null]
+  VoterId string [not null, unique]
+  DateOfBirth date [not null, note: 'Used for authentication']
+  PassportNo string [unique, note: 'Optional authentication field']
+
+  District string [not null]
+  AreaNo int [not null]
+  
+  HasVoted int [not null, default: 0, note: '0=Not Voted, 1=Voted (prevents re-login)']
+}
+
+/* ====== Direct Vote Table (Voter → Candidate) ====== */
+Table VoteInfo {
+  id int [pk, increment]
+
+  VoterId int [not null]
+  CandidateId int [not null]
+
+  District string [not null]
+  AreaNo int [not null]
+
+  VoteTime datetime [not null, default: `now()`]
+  TransactionHash string [note: 'Ethereum/Blockchain transaction hash']
+  BlockNumber string [note: 'Blockchain block number']
+
+  Indexes {
+    // One voter → one direct vote per area
+    (VoterId, District, AreaNo) [unique]
+  }
+}
+
+/* ====== Political Party Table ====== */
+Table PartyInfo {
+  id int [pk, increment]
+  
+  PartyName string [not null, unique]
+  PartyLogo string [not null]
+  
+  District string [not null]
+  AreaNo int [not null]
+  
+  Indexes {
+    // One party per area
+    (PartyName, District, AreaNo) [unique]
+  }
+}
+
+/* ====== Indirect Vote Table (Voter → Party) ====== */
+Table IndirectVoteInfo {
+  id int [pk, increment]
+  
+  VoterId int [not null]
+  PartyId int [not null]
+  
+  District string [not null]
+  AreaNo int [not null]
+  
+  VoteTime datetime [not null, default: `now()`]
+  TransactionHash string [note: 'Ethereum/Blockchain transaction hash']
+  BlockNumber string [note: 'Blockchain block number']
+  
+  Indexes {
+    // One voter → one indirect vote per area
+    (VoterId, District, AreaNo) [unique]
+  }
+}
+
+/* ====== RELATIONSHIPS / FOREIGN KEYS ====== */
+
+// Candidate must belong to a valid election area
+Ref: CandidateInfo.(District, AreaNo) > ElectionAreaInfo.(District, AreaNo)
+
+// Voter must belong to a valid election area
+Ref: VoterInfo.(District, AreaNo) > ElectionAreaInfo.(District, AreaNo)
+
+// Party must belong to a valid election area
+Ref: PartyInfo.(District, AreaNo) > ElectionAreaInfo.(District, AreaNo)
+
+// Direct Vote: VOTER → CANDIDATE
+Ref: VoteInfo.VoterId > VoterInfo.id [delete: cascade]
+Ref: VoteInfo.CandidateId > CandidateInfo.id [delete: cascade]
+Ref: VoteInfo.(District, AreaNo) > ElectionAreaInfo.(District, AreaNo)
+
+// Indirect Vote: VOTER → PARTY
+Ref: IndirectVoteInfo.VoterId > VoterInfo.id [delete: cascade]
+Ref: IndirectVoteInfo.PartyId > PartyInfo.id [delete: cascade]
+Ref: IndirectVoteInfo.(District, AreaNo) > ElectionAreaInfo.(District, AreaNo)
+
+/* ====== ADDITIONAL CONSTRAINTS (Implement in SQL) ====== */
+
+// NOTE: DBML doesn't support CHECK constraints natively.
+// Implement these in your actual SQL database:
+
+/*
+-- For Direct Votes (Voter → Candidate)
+-- Ensure vote's area matches candidate's area
+ALTER TABLE VoteInfo ADD CONSTRAINT chk_vote_candidate_area
+CHECK (
+  EXISTS (
+    SELECT 1 FROM CandidateInfo 
+    WHERE CandidateInfo.id = VoteInfo.CandidateId 
+    AND CandidateInfo.District = VoteInfo.District 
+    AND CandidateInfo.AreaNo = VoteInfo.AreaNo
+  )
+);
+
+-- Ensure vote's area matches voter's area
+ALTER TABLE VoteInfo ADD CONSTRAINT chk_vote_voter_area
+CHECK (
+  EXISTS (
+    SELECT 1 FROM VoterInfo 
+    WHERE VoterInfo.id = VoteInfo.VoterId 
+    AND VoterInfo.District = VoteInfo.District 
+    AND VoterInfo.AreaNo = VoteInfo.AreaNo
+  )
+);
+
+-- For Indirect Votes (Voter → Party)
+-- Ensure indirect vote's area matches party's area
+ALTER TABLE IndirectVoteInfo ADD CONSTRAINT chk_indirect_vote_party_area
+CHECK (
+  EXISTS (
+    SELECT 1 FROM PartyInfo 
+    WHERE PartyInfo.id = IndirectVoteInfo.PartyId 
+    AND PartyInfo.District = IndirectVoteInfo.District 
+    AND PartyInfo.AreaNo = IndirectVoteInfo.AreaNo
+  )
+);
+
+-- Ensure indirect vote's area matches voter's area
+ALTER TABLE IndirectVoteInfo ADD CONSTRAINT chk_indirect_vote_voter_area
+CHECK (
+  EXISTS (
+    SELECT 1 FROM VoterInfo 
+    WHERE VoterInfo.id = IndirectVoteInfo.VoterId 
+    AND VoterInfo.District = IndirectVoteInfo.District 
+    AND VoterInfo.AreaNo = IndirectVoteInfo.AreaNo
+  )
+);
+
+-- Prevent voter from casting both direct and indirect votes
+-- (Optional: depends on your election rules)
+ALTER TABLE IndirectVoteInfo ADD CONSTRAINT chk_no_double_voting
+CHECK (
+  NOT EXISTS (
+    SELECT 1 FROM VoteInfo 
+    WHERE VoteInfo.VoterId = IndirectVoteInfo.VoterId 
+    AND VoteInfo.District = IndirectVoteInfo.District 
+    AND VoteInfo.AreaNo = IndirectVoteInfo.AreaNo
+  )
+);
+*/
+
+/* ====== BUSINESS RULES ENFORCED ====== */
+// ✅ One candidate per party per position per area
+// ✅ One party per area (can run in multiple areas)
+// ✅ Voter can only vote in their own area (via CHECK constraint)
+// ✅ Candidate can only receive votes from their area (via CHECK constraint)
+// ✅ Party can only receive votes from their area (via CHECK constraint)
+// ✅ One voter → one DIRECT vote per area
+// ✅ One voter → one INDIRECT vote per area
+// ⚠️ Optional: Prevent voter from casting both types in same area (CHECK constraint)
+// ✅ All votes are timestamped
+
+/* ====== RELATIONSHIPS SUMMARY ====== */
+// ElectionArea → Candidates: 1-to-many (each area has multiple candidates)
+// ElectionArea → Voters: 1-to-many (each area has multiple voters)
+// ElectionArea → Parties: 1-to-many (each area has multiple parties)
+
+// DIRECT ELECTION (Voter → Candidate):
+// Voter → Candidate: many-to-many through VoteInfo
+// Candidate ← Votes: 1-to-many (one candidate receives many votes)
+// Voter → Direct Votes: 1-to-1 per area (one voter can cast ONE direct vote per area)
+
+// INDIRECT ELECTION (Voter → Party):
+// Voter → Party: many-to-many through IndirectVoteInfo
+// Party ← Indirect Votes: 1-to-many (one party receives many votes)
+// Voter → Indirect Votes: 1-to-1 per area (one voter can cast ONE indirect vote per area)
+
+/* ====== HOW VOTING WORKS ====== */
+
+// DIRECT VOTING (Candidate-based):
+// VoteInfo table records:
+// - WHO voted (VoterId → VoterInfo)
+// - FOR WHOM (CandidateId → CandidateInfo)  
+// - IN WHICH AREA (District, AreaNo)
+// - WHEN (VoteTime)
+//
+// Example: If Voter #5 votes for Candidate #12 in District "A", AreaNo 1:
+// VoteInfo record: {VoterId: 5, CandidateId: 12, District: "A", AreaNo: 1, VoteTime: "2025-12-25"}
+
+// INDIRECT VOTING (Party-based):
+// IndirectVoteInfo table records:
+// - WHO voted (VoterId → VoterInfo)
+// - FOR WHICH PARTY (PartyId → PartyInfo)
+// - IN WHICH AREA (District, AreaNo)
+// - WHEN (VoteTime)
+//
+// Example: If Voter #5 votes for Party #3 in District "A", AreaNo 1:
+// IndirectVoteInfo record: {VoterId: 5, PartyId: 3, District: "A", AreaNo: 1, VoteTime: "2025-12-25"}
+//
+// NOTE: In indirect voting, voter has NO relationship with individual candidates,
+// only with the political party. The party affiliation is already captured in
+// CandidateInfo.CandidateParty field if you need to link parties to candidates.

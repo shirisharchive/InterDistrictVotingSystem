@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voter Portal - Login</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <style>
+      .face-capture-container {
+        margin: 30px 0;
+        text-align: center;
+      }
+
+      .video-wrapper {
+        position: relative;
+        display: inline-block;
+        margin: 20px auto;
+      }
+
+      #videoElement {
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+        border: 3px solid #3498db;
+        border-radius: 10px;
+        display: block;
+      }
+
+      #overlayCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .capture-controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .credential-form {
+        display: none;
+        margin-top: 30px;
+      }
+
+      .credential-form.active {
+        display: block;
+      }
+
+      .face-status {
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        font-weight: bold;
+      }
+
+      .face-status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .face-status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .face-status.warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .attempts-counter {
+        font-size: 18px;
+        color: #e74c3c;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      canvas {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Nepal Flag Background -->
+    <div id="nepal-flag">
+      <div class="outer-triangle-top"></div>
+      <div class="outer-triangle-bottom"></div>
+      <div class="red_flag">
+        <div class="inner-triangle-top"></div>
+        <div class="inner-triangle-bottom"></div>
+      </div>
+      <div id="moon">
+        <div class="shape">
+          <div class="star"></div>
+        </div>
+      </div>
+      <div id="sun"></div>
+    </div>
+
+    <div id="nepal-flag-left">
+      <div class="outer-triangle-top"></div>
+      <div class="outer-triangle-bottom"></div>
+      <div class="red_flag">
+        <div class="inner-triangle-top"></div>
+        <div class="inner-triangle-bottom"></div>
+      </div>
+      <div id="moon">
+        <div class="shape">
+          <div class="star"></div>
+        </div>
+      </div>
+      <div id="sun"></div>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>🗳️ Voter Portal</h1>
+        <p>Secure & Transparent Voting</p>
+      </header>
+
+      <nav>
+        <a href="../index.html">Home</a>
+      </nav>
+
+      <main>
+        <div id="alert" class="alert"></div>
+        <div id="loading" class="loading" style="display: none"></div>
+
+        <div class="form-container">
+          <div class="card">
+            <h2>Voter Login - Face Recognition</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px">
+              First, verify your identity using face recognition
+            </p>
+
+            <!-- Face Recognition Section -->
+            <div id="faceSection" class="face-capture-container">
+              <div id="faceStatus" class="face-status hidden"></div>
+              <div id="attemptsCounter" class="attempts-counter hidden"></div>
+
+              <div style="margin-bottom: 15px">
+                <label
+                  for="cameraSelect"
+                  style="
+                    display: block;
+                    margin-bottom: 8px;
+                    font-weight: 500;
+                    color: #333;
+                  "
+                >
+                  📹 Select Camera
+                </label>
+                <select
+                  id="cameraSelect"
+                  style="
+                    width: 100%;
+                    padding: 10px;
+                    border: 2px solid #3498db;
+                    border-radius: 8px;
+                    font-size: 14px;
+                  "
+                >
+                  <option value="1">📱 Built-in Camera</option>
+                  <option value="0" selected>📷 External Camera</option>
+                </select>
+              </div>
+
+              <div class="video-wrapper">
+                <video id="videoElement" autoplay playsinline></video>
+                <canvas id="overlayCanvas"></canvas>
+              </div>
+              <canvas id="canvas" style="display: none"></canvas>
+
+              <div class="capture-controls">
+                <button
+                  type="button"
+                  id="startCameraBtn"
+                  class="btn btn-primary"
+                >
+                  📷 Start Camera
+                </button>
+                <button
+                  type="button"
+                  id="stopCameraBtn"
+                  class="btn btn-secondary hidden"
+                >
+                  ⏹ Stop Camera
+                </button>
+                <button
+                  type="button"
+                  id="resetForNewVoterBtn"
+                  class="btn btn-secondary hidden"
+                  style="background: #27ae60"
+                >
+                  🔄 New Voter
+                </button>
+              </div>
+              <div
+                id="detectionStatus"
+                style="
+                  margin-top: 15px;
+                  padding: 10px;
+                  border-radius: 5px;
+                  background: #fff3cd;
+                  color: #856404;
+                  display: none;
+                "
+              >
+                <strong>👁️ Looking for face...</strong>
+              </div>
+            </div>
+
+            <!-- Credentials Form (shown after successful face recognition) -->
+            <form id="credentialForm" class="credential-form">
+              <div
+                id="voterInfoDisplay"
+                style="
+                  background: #e8f5e9;
+                  padding: 15px;
+                  border-radius: 8px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h3 style="color: #2e7d32; margin-top: 0">
+                  ✓ Face Recognized!
+                </h3>
+                <p><strong>Name:</strong> <span id="displayName"></span></p>
+                <p>
+                  <strong>Voter ID:</strong> <span id="displayVoterId"></span>
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label for="voterId">Confirm Voter ID *</label>
+                <input
+                  type="text"
+                  id="voterId"
+                  required
+                  placeholder="Enter your voter ID"
+                  readonly
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="dob">Confirm Date of Birth *</label>
+                <input type="date" id="dob" required placeholder="YYYY-MM-DD" />
+                <small style="color: #666"
+                  >Enter your date of birth to proceed</small
+                >
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%">
+                Login to Vote
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h3>How to Vote</h3>
+          <div class="steps">
+            <div class="step">
+              <span class="step-number">1</span>
+              <p>Verify your face using camera</p>
+            </div>
+            <div class="step">
+              <span class="step-number">2</span>
+              <p>Confirm your credentials</p>
+            </div>
+            <div class="step">
+              <span class="step-number">3</span>
+              <p>View candidates from your district</p>
+            </div>
+            <div class="step">
+              <span class="step-number">4</span>
+              <p>Cast your votes securely</p>
+            </div>
+          </div>
+          <p style="text-align: center; margin-top: 20px; color: #666">
+            ⚠️ You have 3 attempts for face recognition
+          </p>
+          <p
+            style="
+              text-align: center;
+              margin-top: 10px;
+              color: #e74c3c;
+              font-weight: bold;
+            "
+          >
+            You have 15 minutes to complete your voting after login
+          </p>
+        </div>
+      </main>
+
+      <footer>
+        <p>Conceptualized By the Students of Everest Engineering College</p>
+      </footer>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script
+      async
+      src="https://docs.opencv.org/4.7.0/opencv.js"
+      onload="onOpenCvReady()"
+      type="text/javascript"
+    ></script>
+    <script>
+      const FACE_API_URL = "http://localhost:5001";
+      let cvReady = false;
+
+      let videoStream = null;
+      let recognizedVoter = null;
+      let attemptsLeft = 3;
+      let isRateLimited = false;
+      let faceDetectionInterval = null;
+      let captureInProgress = false;
+      let faceCascade = null;
+      let currentAbortController = null;
+      let isVerificationComplete = false;
+      let consecutiveFailures = 0;
+      const MAX_CONSECUTIVE_FAILURES = 5;
+
+      // OpenCV.js ready callback
+      function onOpenCvReady() {
+        if (typeof cv === "undefined") {
+          console.error("OpenCV.js failed to load");
+          return;
+        }
+
+        // Wait for cv module to be ready
+        cv["onRuntimeInitialized"] = () => {
+          cvReady = true;
+          console.log("OpenCV.js is ready");
+          loadHaarCascade();
+        };
+      }
+
+      // Load Haar Cascade classifier
+      function loadHaarCascade() {
+        const faceCascadeFile = "haarcascade_frontalface_default.xml";
+        const url =
+          "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml";
+
+        let request = new XMLHttpRequest();
+        request.open("GET", url, true);
+        request.responseType = "arraybuffer";
+        request.onload = function () {
+          if (request.readyState === 4 && request.status === 200) {
+            try {
+              let data = new Uint8Array(request.response);
+              cv.FS_createDataFile(
+                "/",
+                faceCascadeFile,
+                data,
+                true,
+                false,
+                false,
+              );
+              faceCascade = new cv.CascadeClassifier();
+              faceCascade.load(faceCascadeFile);
+              console.log("Haar Cascade loaded successfully");
+            } catch (error) {
+              console.error("Error loading Haar Cascade:", error);
+              faceCascade = null;
+            }
+          } else {
+            console.error("Failed to download Haar Cascade file");
+          }
+        };
+        request.onerror = function () {
+          console.error("Network error while downloading Haar Cascade");
+        };
+        request.send();
+      }
+
+      const videoElement = document.getElementById("videoElement");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const overlayCanvas = document.getElementById("overlayCanvas");
+      const overlayCtx = overlayCanvas.getContext("2d");
+
+      const startCameraBtn = document.getElementById("startCameraBtn");
+      const stopCameraBtn = document.getElementById("stopCameraBtn");
+      const resetForNewVoterBtn = document.getElementById(
+        "resetForNewVoterBtn",
+      );
+      const faceStatus = document.getElementById("faceStatus");
+      const attemptsCounter = document.getElementById("attemptsCounter");
+      const credentialForm = document.getElementById("credentialForm");
+      const detectionStatus = document.getElementById("detectionStatus");
+
+      // Check rate limit on page load
+      async function checkRateLimit() {
+        try {
+          const response = await fetch(
+            `${FACE_API_URL}/api/face-recognition/check-rate-limit`,
+          );
+          const result = await response.json();
+
+          if (result.locked) {
+            isRateLimited = true;
+            showFaceStatus(result.message, "error");
+            startCameraBtn.disabled = true;
+            attemptsLeft = 0;
+          } else {
+            attemptsLeft = result.attemptsLeft || 3;
+            updateAttemptsCounter();
+          }
+        } catch (error) {
+          console.error("Error checking rate limit:", error);
+        }
+      }
+
+      function updateAttemptsCounter() {
+        if (attemptsLeft <= 3 && attemptsLeft > 0) {
+          attemptsCounter.textContent = `Attempts remaining: ${attemptsLeft}`;
+          attemptsCounter.classList.remove("hidden");
+        }
+      }
+
+      function showFaceStatus(message, type) {
+        faceStatus.textContent = message;
+        faceStatus.className = `face-status ${type}`;
+        faceStatus.classList.remove("hidden");
+      }
+
+      function hideFaceStatus() {
+        faceStatus.classList.add("hidden");
+      }
+
+      // Start camera
+      startCameraBtn.addEventListener("click", async () => {
+        if (isRateLimited) {
+          showFaceStatus("You are temporarily locked. Please wait.", "error");
+          return;
+        }
+
+        // Reset all verification states for new voter
+        isVerificationComplete = false;
+        consecutiveFailures = 0;
+        captureInProgress = false;
+        recognizedVoter = null;
+
+        // Hide credential form if it was shown for previous voter
+        credentialForm.classList.remove("active");
+
+        // Clear any previous face detection interval
+        if (faceDetectionInterval) {
+          clearInterval(faceDetectionInterval);
+          faceDetectionInterval = null;
+        }
+
+        try {
+          // Get selected camera from dropdown
+          const selectedCameraIndex = parseInt(
+            document.getElementById("cameraSelect").value,
+          );
+          console.log("Selected camera index:", selectedCameraIndex);
+
+          // Set up video constraints
+          let videoConstraints = {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user",
+          };
+
+          // Try to enumerate cameras and use selected one
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(
+              (device) => device.kind === "videoinput",
+            );
+
+            // Use the selected camera index from dropdown
+            if (videoDevices.length > selectedCameraIndex) {
+              videoConstraints.deviceId = {
+                exact: videoDevices[selectedCameraIndex].deviceId,
+              };
+              console.log(
+                `Using camera ${selectedCameraIndex}:`,
+                videoDevices[selectedCameraIndex].label,
+              );
+            } else {
+              console.warn(
+                `Camera ${selectedCameraIndex} not found, using default`,
+              );
+            }
+          } catch (enumError) {
+            console.warn(
+              "Could not enumerate devices, using default camera:",
+              enumError,
+            );
+          }
+
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraints,
+          });
+
+          videoElement.srcObject = videoStream;
+
+          startCameraBtn.classList.add("hidden");
+          stopCameraBtn.classList.remove("hidden");
+          detectionStatus.style.display = "block";
+
+          showFaceStatus(
+            "Camera started. Position your face in the frame - it will capture automatically!",
+            "warning",
+          );
+
+          // Start automatic face detection after video is ready
+          videoElement.onloadedmetadata = () => {
+            startFaceDetection();
+          };
+        } catch (error) {
+          showFaceStatus("Error accessing camera: " + error.message, "error");
+        }
+      });
+
+      // Automatic face detection and capture
+      function startFaceDetection() {
+        // Don't start if verification is already complete or too many failures
+        if (
+          isVerificationComplete ||
+          consecutiveFailures >= MAX_CONSECUTIVE_FAILURES
+        ) {
+          return;
+        }
+
+        detectionStatus.innerHTML = "<strong>👁️ Looking for face...</strong>";
+        detectionStatus.style.background = "#fff3cd";
+        detectionStatus.style.color = "#856404";
+
+        // Check for face every 1000ms (reduced frequency to prevent spam)
+        faceDetectionInterval = setInterval(() => {
+          if (
+            !captureInProgress &&
+            !isVerificationComplete &&
+            videoElement.readyState === videoElement.HAVE_ENOUGH_DATA &&
+            consecutiveFailures < MAX_CONSECUTIVE_FAILURES
+          ) {
+            detectAndCaptureFace();
+          }
+        }, 1000); // Increased from 500ms to 1000ms
+      }
+
+      async function detectAndCaptureFace() {
+        try {
+          // Update overlay canvas size to match video
+          overlayCanvas.width = videoElement.videoWidth;
+          overlayCanvas.height = videoElement.videoHeight;
+
+          // Draw current frame to canvas
+          canvas.width = videoElement.videoWidth;
+          canvas.height = videoElement.videoHeight;
+          ctx.drawImage(videoElement, 0, 0);
+
+          // Clear previous rectangles
+          overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+          // Simple face detection using canvas image data
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const faceRect = detectFaceInImage(imageData);
+
+          if (faceRect) {
+            // Draw rectangle around detected face
+            overlayCtx.strokeStyle = "#00ff00";
+            overlayCtx.lineWidth = 3;
+            overlayCtx.strokeRect(
+              faceRect.x,
+              faceRect.y,
+              faceRect.width,
+              faceRect.height,
+            );
+
+            // Draw label
+            overlayCtx.fillStyle = "#00ff00";
+            overlayCtx.font = "16px Arial";
+            overlayCtx.fillText("Face Detected", faceRect.x, faceRect.y - 10);
+
+            detectionStatus.innerHTML =
+              "<strong>✓ Face detected! Capturing...</strong>";
+            detectionStatus.style.background = "#d4edda";
+            detectionStatus.style.color = "#155724";
+
+            // Stop detection during capture
+            clearInterval(faceDetectionInterval);
+            captureInProgress = true;
+
+            // Capture after short delay for stability
+            setTimeout(() => {
+              captureFaceAndVerify();
+            }, 500);
+          }
+        } catch (error) {
+          console.error("Detection error:", error);
+        }
+      }
+
+      // Haar Cascade face detection using OpenCV.js
+      function detectFaceInImage(imageData) {
+        if (!cvReady || !faceCascade) {
+          console.log("OpenCV not ready yet, using fallback detection");
+          return detectFaceInImageFallback(imageData);
+        }
+
+        try {
+          // Create Mat from ImageData
+          let src = cv.matFromImageData(imageData);
+          let gray = new cv.Mat();
+
+          // Convert to grayscale
+          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+
+          // Detect faces
+          let faces = new cv.RectVector();
+          let msize = new cv.Size(0, 0);
+          faceCascade.detectMultiScale(gray, faces, 1.1, 3, 0, msize, msize);
+
+          let faceRect = null;
+          if (faces.size() > 0) {
+            const face = faces.get(0);
+            faceRect = {
+              x: face.x,
+              y: face.y,
+              width: face.width,
+              height: face.height,
+            };
+          }
+
+          // Clean up
+          src.delete();
+          gray.delete();
+          faces.delete();
+
+          return faceRect;
+        } catch (error) {
+          console.error("Haar Cascade detection error:", error);
+          return detectFaceInImageFallback(imageData);
+        }
+      }
+
+      // Fallback detection if OpenCV is not ready
+      function detectFaceInImageFallback(imageData) {
+        const data = imageData.data;
+        let brightPixels = 0;
+        let totalBrightness = 0;
+        const threshold = 100;
+        const sampleRate = 10;
+
+        for (let i = 0; i < data.length; i += 4 * sampleRate) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const brightness = (r + g + b) / 3;
+
+          totalBrightness += brightness;
+          if (brightness > threshold) {
+            brightPixels++;
+          }
+        }
+
+        const avgBrightness =
+          totalBrightness / (data.length / (4 * sampleRate));
+        const brightRatio = brightPixels / (data.length / (4 * sampleRate));
+
+        const hasFace =
+          avgBrightness > 60 &&
+          avgBrightness < 200 &&
+          brightRatio > 0.2 &&
+          brightRatio < 0.8;
+
+        // Return approximate center face rectangle
+        if (hasFace) {
+          return {
+            x: imageData.width * 0.25,
+            y: imageData.height * 0.2,
+            width: imageData.width * 0.5,
+            height: imageData.height * 0.6,
+          };
+        }
+        return null;
+      }
+
+      async function captureFaceAndVerify() {
+        try {
+          showLoading(true);
+          hideFaceStatus();
+          detectionStatus.style.display = "none";
+
+          // Draw video frame to canvas
+          canvas.width = videoElement.videoWidth;
+          canvas.height = videoElement.videoHeight;
+          ctx.drawImage(videoElement, 0, 0);
+
+          // Convert canvas to base64
+          const imageData = canvas.toDataURL("image/jpeg", 0.95);
+
+          // Send to face recognition API
+          const response = await fetch(
+            `${FACE_API_URL}/api/face-recognition/verify`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ image: imageData }),
+            },
+          );
+
+          const result = await response.json();
+
+          if (result.success && result.data) {
+            // Face recognized! Mark verification as complete
+            isVerificationComplete = true;
+            consecutiveFailures = 0;
+            recognizedVoter = result.data;
+
+            // Stop all detection immediately
+            if (faceDetectionInterval) {
+              clearInterval(faceDetectionInterval);
+              faceDetectionInterval = null;
+            }
+
+            // Check if already voted
+            if (recognizedVoter.hasVoted === 1) {
+              showFaceStatus(
+                "You have already voted! You cannot login again.",
+                "error",
+              );
+              stopCamera();
+              return;
+            }
+
+            // Show success with liveness info
+            let message =
+              result.message +
+              ` (Match: ${(result.data.matchConfidence * 100).toFixed(1)}%)`;
+            if (result.livenessCheck && result.livenessConfidence) {
+              message += ` | Liveness: ${(result.livenessConfidence * 100).toFixed(1)}% ✓`;
+            }
+            showFaceStatus(message, "success");
+
+            // Stop camera
+            stopCamera();
+
+            // Show credential form and "New Voter" button
+            document.getElementById("displayName").textContent =
+              recognizedVoter.voterName;
+            document.getElementById("displayVoterId").textContent =
+              recognizedVoter.voterId;
+            document.getElementById("voterId").value = recognizedVoter.voterId;
+
+            credentialForm.classList.add("active");
+            attemptsCounter.classList.add("hidden");
+
+            // Show "New Voter" button so admin can reset if needed
+            resetForNewVoterBtn.classList.remove("hidden");
+          } else {
+            // Face not recognized or liveness check failed
+            consecutiveFailures++;
+
+            let errorMsg =
+              result.message || "Face not recognized. Please try again.";
+
+            // Add specific liveness failure info
+            if (result.livenessCheck === false && result.reason) {
+              errorMsg = `⚠️ ${result.reason}. Please try with a live camera.`;
+            }
+
+            attemptsLeft = result.attemptsLeft || attemptsLeft - 1;
+            updateAttemptsCounter();
+
+            if (
+              result.locked ||
+              attemptsLeft <= 0 ||
+              consecutiveFailures >= MAX_CONSECUTIVE_FAILURES
+            ) {
+              isRateLimited = true;
+              let lockMessage = "Too many failed attempts.";
+
+              if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                lockMessage =
+                  "Too many consecutive failures. Please refresh and try again.";
+              }
+
+              showFaceStatus(errorMsg + " " + lockMessage, "error");
+              stopCamera();
+              startCameraBtn.disabled = true;
+            } else {
+              showFaceStatus(errorMsg, "error");
+              // Wait before restarting detection (progressive delay)
+              const delay = Math.min(2000 + consecutiveFailures * 1000, 5000);
+              setTimeout(() => {
+                captureInProgress = false;
+                if (!isVerificationComplete && detectionStatus) {
+                  detectionStatus.style.display = "block";
+                  startFaceDetection();
+                }
+              }, delay);
+            }
+          }
+        } catch (error) {
+          // Don't show error if request was aborted (user cancelled)
+          if (error.name === "AbortError") {
+            console.log("Face recognition request was cancelled");
+            return;
+          }
+
+          consecutiveFailures++;
+          console.error("Face recognition error:", error);
+
+          if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+            showFaceStatus(
+              "Too many connection errors. Please refresh the page and try again.",
+              "error",
+            );
+            stopCamera();
+            return;
+          }
+
+          showFaceStatus("Connection error: " + error.message, "error");
+
+          // Progressive delay before retry
+          const delay = Math.min(3000 + consecutiveFailures * 1000, 8000);
+          setTimeout(() => {
+            captureInProgress = false;
+            if (!isVerificationComplete && detectionStatus) {
+              detectionStatus.style.display = "block";
+              startFaceDetection();
+            }
+          }, delay);
+        } finally {
+          showLoading(false);
+          currentAbortController = null;
+        }
+      }
+
+      // Stop camera
+      stopCameraBtn.addEventListener("click", stopCamera);
+
+      function stopCamera() {
+        // Mark verification as complete to stop all detection
+        isVerificationComplete = true;
+
+        // Cancel any ongoing request
+        if (currentAbortController) {
+          currentAbortController.abort();
+          currentAbortController = null;
+        }
+
+        // Clear face detection interval
+        if (faceDetectionInterval) {
+          clearInterval(faceDetectionInterval);
+          faceDetectionInterval = null;
+        }
+
+        // Clear overlay
+        if (overlayCtx) {
+          overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        }
+
+        if (videoStream) {
+          videoStream.getTracks().forEach((track) => track.stop());
+          videoElement.srcObject = null;
+          videoStream = null;
+        }
+
+        captureInProgress = false;
+        startCameraBtn.classList.remove("hidden");
+        stopCameraBtn.classList.add("hidden");
+        resetForNewVoterBtn.classList.add("hidden");
+        detectionStatus.style.display = "none";
+      }
+
+      // Reset for new voter button handler
+      resetForNewVoterBtn.addEventListener("click", () => {
+        // Stop camera if running
+        stopCamera();
+
+        // Reset all states
+        isVerificationComplete = false;
+        consecutiveFailures = 0;
+        captureInProgress = false;
+        recognizedVoter = null;
+        attemptsLeft = 3;
+        isRateLimited = false;
+
+        // Hide credential form and status messages
+        credentialForm.classList.remove("active");
+        hideFaceStatus();
+        attemptsCounter.classList.add("hidden");
+
+        // Clear form fields
+        document.getElementById("voterId").value = "";
+        document.getElementById("dob").value = "";
+        document.getElementById("displayName").textContent = "";
+        document.getElementById("displayVoterId").textContent = "";
+
+        // Hide new voter button and show start camera button
+        resetForNewVoterBtn.classList.add("hidden");
+        startCameraBtn.classList.remove("hidden");
+        startCameraBtn.disabled = false;
+
+        // Show ready message
+        showFaceStatus(
+          "Ready for new voter. Click 'Start Camera' to begin.",
+          "success",
+        );
+      });
+
+      // Submit credentials
+      credentialForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (!recognizedVoter) {
+          showAlert("Please complete face verification first", "error");
+          return;
+        }
+
+        const voterId = document.getElementById("voterId").value.trim();
+        const dob = document.getElementById("dob").value.trim();
+
+        if (!voterId || !dob) {
+          showAlert("Please enter Date of Birth", "error");
+          return;
+        }
+
+        try {
+          showLoading(true);
+
+          // Verify credentials with backend
+          const response = await fetch(
+            `${API_BASE_URL}/voters/verify-credentials`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                voterId: voterId,
+                dob: dob,
+                faceVerified: true,
+              }),
+            },
+          );
+
+          const result = await response.json();
+
+          if (!result.success) {
+            showAlert(result.message, "error");
+            return;
+          }
+
+          // Store voter info in sessionStorage
+          sessionStorage.setItem(
+            "voterInfo",
+            JSON.stringify({
+              id: result.data.id,
+              voterId: result.data.voterId,
+              name: result.data.voterName,
+              district: result.data.district,
+              areaNo: result.data.areaNo,
+              loginTime: new Date().getTime(),
+            }),
+          );
+
+          showAlert("Login successful! Redirecting...", "success");
+
+          // Show "New Voter" button for admin use (in case they want to register another voter before redirect completes)
+          resetForNewVoterBtn.classList.remove("hidden");
+
+          // Redirect to voting dashboard
+          setTimeout(() => {
+            window.location.href = "voter-dashboard.html";
+          }, 1500);
+        } catch (error) {
+          showAlert("Error: " + error.message, "error");
+        } finally {
+          showLoading(false);
+        }
+      });
+
+      // Check rate limit on page load
+      checkRateLimit();
+
+      // Clean up on page unload
+      window.addEventListener("beforeunload", () => {
+        stopCamera();
+      });
+    </script>
+  </body>
+</html>

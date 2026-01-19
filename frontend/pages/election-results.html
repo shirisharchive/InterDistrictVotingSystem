@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Election Results Portal - Voting System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        color: #333;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 1.1rem;
+      }
+
+      .filters {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .filter-group label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      .filter-group select,
+      .filter-group input {
+        padding: 10px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        min-width: 200px;
+        transition: border-color 0.3s;
+      }
+
+      .filter-group select:focus,
+      .filter-group input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        align-self: flex-end;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+        margin-left: 10px;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+
+      .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      .result-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .result-card h2 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .result-card h2 .icon {
+        font-size: 1.5rem;
+      }
+
+      .result-card .subtitle {
+        color: #666;
+        margin-bottom: 20px;
+        font-size: 1rem;
+      }
+
+      .area-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .area-section:last-child {
+        border-bottom: none;
+      }
+
+      .area-header {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+      }
+
+      .area-header h3 {
+        color: #444;
+        font-size: 1.2rem;
+      }
+
+      .area-header .total-votes {
+        color: #667eea;
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+
+      .candidate-list,
+      .party-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .candidate-item,
+      .party-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.3s;
+      }
+
+      .candidate-item:hover,
+      .party-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+      }
+
+      .candidate-item.winner,
+      .party-item.winner {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+      }
+
+      .item-info {
+        flex: 1;
+      }
+
+      .item-name {
+        font-weight: 600;
+        color: #333;
+        font-size: 1.1rem;
+        margin-bottom: 3px;
+      }
+
+      .item-party {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .item-votes {
+        text-align: right;
+      }
+
+      .vote-count {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #667eea;
+      }
+
+      .vote-label {
+        font-size: 0.8rem;
+        color: #999;
+      }
+
+      .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+        font-size: 1.1rem;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        font-size: 1.2rem;
+        color: #667eea;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #dc3545;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 5px;
+      }
+
+      .stat-label {
+        color: #666;
+        font-size: 1rem;
+      }
+
+      @media (max-width: 768px) {
+        .results-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .filters {
+          flex-direction: column;
+        }
+
+        .filter-group select,
+        .filter-group input {
+          width: 100%;
+        }
+
+        .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🗳️ Election Results Portal</h1>
+        <p>Real-time voting results and statistics</p>
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label for="district">District</label>
+          <select id="district">
+            <option value="">All Districts</option>
+            <option value="Dadeldhura">Dadeldhura</option>
+            <option value="Kathmandu">Kathmandu</option>
+            <option value="Pokhara">Pokhara</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="areaNo">Area Number</label>
+          <select id="areaNo">
+            <option value="">All Areas</option>
+            <option value="1">Area 1</option>
+            <option value="2">Area 2</option>
+            <option value="3">Area 3</option>
+            <option value="4">Area 4</option>
+            <option value="5">Area 5</option>
+            <option value="6">Area 6</option>
+            <option value="7">Area 7</option>
+            <option value="8">Area 8</option>
+            <option value="9">Area 9</option>
+            <option value="10">Area 10</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="loadResults()">
+          Load Results
+        </button>
+        <button class="btn btn-secondary" onclick="refreshResults()">
+          Refresh
+        </button>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div id="error" class="error" style="display: none"></div>
+
+      <div class="results-grid">
+        <div class="result-card">
+          <h2>
+            <span class="icon">👤</span> Direct Election Results (Candidates)
+          </h2>
+          <p class="subtitle">Votes received by each candidate</p>
+          <div id="candidateResults">
+            <div class="loading">Loading candidate results...</div>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <h2>
+            <span class="icon">🎯</span> Proportional Election Results (Parties)
+          </h2>
+          <p class="subtitle">Votes received by each political party</p>
+          <div id="partyResults">
+            <div class="loading">Loading party results...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE_URL = "http://localhost:5500/api";
+
+      // Authentication check - protect the page
+      function checkAuthentication() {
+        const authData = localStorage.getItem("electionAuth");
+
+        if (!authData) {
+          // No authentication data found, redirect to login
+          window.location.href = "results-login.html";
+          return false;
+        }
+
+        try {
+          const auth = JSON.parse(authData);
+
+          // Check if token is expired (valid for 24 hours)
+          const loginTime = new Date(auth.loginTime);
+          const now = new Date();
+          const hoursSinceLogin = (now - loginTime) / (1000 * 60 * 60);
+
+          if (hoursSinceLogin > 24) {
+            // Token expired
+            localStorage.removeItem("electionAuth");
+            alert("Your session has expired. Please login again.");
+            window.location.href = "results-login.html";
+            return false;
+          }
+
+          // Display user info in header
+          displayUserInfo(auth);
+          return true;
+        } catch (error) {
+          // Invalid auth data
+          localStorage.removeItem("electionAuth");
+          window.location.href = "results-login.html";
+          return false;
+        }
+      }
+
+      function displayUserInfo(auth) {
+        const header = document.querySelector(".header");
+        const userInfo = document.createElement("div");
+        userInfo.style.cssText =
+          "margin-top: 15px; padding-top: 15px; border-top: 2px solid #e0e0e0;";
+        userInfo.innerHTML = `
+          <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <span style="color: #667eea; font-weight: 600;">👤 ${auth.username} (${auth.role})</span>
+            <button onclick="logout()" style="padding: 8px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+              Logout
+            </button>
+          </div>
+        `;
+        header.appendChild(userInfo);
+      }
+
+      function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+          localStorage.removeItem("electionAuth");
+          window.location.href = "results-login.html";
+        }
+      }
+
+      // Load results on page load
+      window.addEventListener("DOMContentLoaded", () => {
+        // Check authentication first
+        if (checkAuthentication()) {
+          loadResults();
+        }
+      });
+
+      async function loadResults() {
+        const district = document.getElementById("district").value;
+        const areaNo = document.getElementById("areaNo").value;
+
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (district) params.append("district", district);
+        if (areaNo) params.append("area_no", areaNo);
+        const queryString = params.toString() ? `?${params.toString()}` : "";
+
+        await Promise.all([
+          loadCandidateResults(queryString),
+          loadPartyResults(queryString),
+        ]);
+
+        updateStats();
+      }
+
+      async function loadCandidateResults(queryString) {
+        const container = document.getElementById("candidateResults");
+        container.innerHTML = '<div class="loading">Loading...</div>';
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/votes/results/area${queryString}`
+          );
+          const data = await response.json();
+
+          if (!data.success) {
+            throw new Error(data.message || "Failed to load candidate results");
+          }
+
+          if (!data.data || data.data.length === 0) {
+            container.innerHTML =
+              '<div class="no-data">No candidate results available</div>';
+            return;
+          }
+
+          let html = "";
+          data.data.forEach((area) => {
+            html += `
+                        <div class="area-section">
+                            <div class="area-header">
+                                <h3>📍 ${area.district} - Area ${
+              area.areaNo
+            }</h3>
+                                <div class="total-votes">Total Votes: ${
+                                  area.totalVotes
+                                }</div>
+                            </div>
+                            <div class="candidate-list">
+                                ${area.candidates
+                                  .map(
+                                    (candidate, index) => `
+                                    <div class="candidate-item ${
+                                      index === 0 ? "winner" : ""
+                                    }">
+                                        <div class="item-info">
+                                            <div class="item-name">${
+                                              candidate.candidateName ||
+                                              "Unknown"
+                                            }</div>
+                                            <div class="item-party">${
+                                              candidate.candidateParty ||
+                                              "Independent"
+                                            } - ${
+                                      candidate.candidatePosition || "N/A"
+                                    }</div>
+                                        </div>
+                                        <div class="item-votes">
+                                            <div class="vote-count">${
+                                              candidate.voteCount
+                                            }</div>
+                                            <div class="vote-label">votes</div>
+                                        </div>
+                                    </div>
+                                `
+                                  )
+                                  .join("")}
+                            </div>
+                        </div>
+                    `;
+          });
+
+          container.innerHTML = html;
+        } catch (error) {
+          console.error("Error loading candidate results:", error);
+          container.innerHTML = `<div class="no-data">Error: ${error.message}</div>`;
+          showError("Failed to load candidate results: " + error.message);
+        }
+      }
+
+      async function loadPartyResults(queryString) {
+        const container = document.getElementById("partyResults");
+        container.innerHTML = '<div class="loading">Loading...</div>';
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/vote/party/results/area${queryString}`
+          );
+          const data = await response.json();
+
+          if (!data.success) {
+            throw new Error(data.message || "Failed to load party results");
+          }
+
+          if (!data.data || data.data.length === 0) {
+            container.innerHTML =
+              '<div class="no-data">No party results available</div>';
+            return;
+          }
+
+          let html = "";
+          data.data.forEach((area) => {
+            html += `
+                        <div class="area-section">
+                            <div class="area-header">
+                                <h3>📍 ${area.district} - Area ${
+              area.areaNo
+            }</h3>
+                                <div class="total-votes">Total Votes: ${
+                                  area.totalVotes
+                                }</div>
+                            </div>
+                            <div class="party-list">
+                                ${area.parties
+                                  .map(
+                                    (party, index) => `
+                                    <div class="party-item ${
+                                      index === 0 ? "winner" : ""
+                                    }">
+                                        <div class="item-info">
+                                            <div class="item-name">${
+                                              party.partyName || "Unknown"
+                                            }</div>
+                                            <div class="item-party">${
+                                              party.partyAbbreviation || "N/A"
+                                            }</div>
+                                        </div>
+                                        <div class="item-votes">
+                                            <div class="vote-count">${
+                                              party.voteCount
+                                            }</div>
+                                            <div class="vote-label">votes</div>
+                                        </div>
+                                    </div>
+                                `
+                                  )
+                                  .join("")}
+                            </div>
+                        </div>
+                    `;
+          });
+
+          container.innerHTML = html;
+        } catch (error) {
+          console.error("Error loading party results:", error);
+          container.innerHTML = `<div class="no-data">Error: ${error.message}</div>`;
+          showError("Failed to load party results: " + error.message);
+        }
+      }
+
+      async function updateStats() {
+        const statsContainer = document.getElementById("stats");
+
+        try {
+          // Fetch total votes
+          const [candidateVotes, partyVotes] = await Promise.all([
+            fetch(`${API_BASE_URL}/votes/total`).then((r) => r.json()),
+            fetch(`${API_BASE_URL}/vote/party/total`).then((r) => r.json()),
+          ]);
+
+          const totalCandidateVotes = candidateVotes.success
+            ? candidateVotes.totalVotes
+            : 0;
+          const totalPartyVotes = partyVotes.success
+            ? partyVotes.totalVotes
+            : 0;
+
+          statsContainer.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${totalCandidateVotes}</div>
+                        <div class="stat-label">Direct Votes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${totalPartyVotes}</div>
+                        <div class="stat-label">Party Votes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${
+                          totalCandidateVotes + totalPartyVotes
+                        }</div>
+                        <div class="stat-label">Total Votes Cast</div>
+                    </div>
+                `;
+        } catch (error) {
+          console.error("Error updating stats:", error);
+        }
+      }
+
+      function refreshResults() {
+        loadResults();
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById("error");
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

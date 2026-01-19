@@ -1,0 +1,7 @@
+{
+  "watch": ["**/*.js", "**/*.json"],
+  "ignore": ["node_modules/**", "build/**", "*.log", ".env"],
+  "delay": 2000,
+  "verbose": false,
+  "ext": "js,json"
+}

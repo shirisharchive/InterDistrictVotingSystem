@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face Registration - Admin Tool</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <style>
+      .registration-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 30px;
+      }
+
+      .video-section {
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      .video-wrapper {
+        position: relative;
+        display: inline-block;
+        margin: 20px auto;
+      }
+
+      #videoElement {
+        width: 100%;
+        max-width: 640px;
+        height: auto;
+        border: 3px solid #3498db;
+        border-radius: 10px;
+        display: block;
+      }
+
+      #overlayCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+
+      .preview-section {
+        display: none;
+        margin: 30px 0;
+        text-align: center;
+      }
+
+      .preview-section.active {
+        display: block;
+      }
+
+      #capturedImage {
+        max-width: 400px;
+        border: 2px solid #27ae60;
+        border-radius: 10px;
+        margin: 20px auto;
+      }
+
+      .status-message {
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .status-message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status-message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .status-message.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      canvas {
+        display: none;
+      }
+
+      .voter-list {
+        margin-top: 40px;
+      }
+
+      .voter-item {
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .voter-item.registered {
+        background: #d4edda;
+      }
+
+      .voter-item.not-registered {
+        background: #fff3cd;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Nepal Flag Background -->
+    <div id="nepal-flag">
+      <div class="outer-triangle-top"></div>
+      <div class="outer-triangle-bottom"></div>
+      <div class="red_flag">
+        <div class="inner-triangle-top"></div>
+        <div class="inner-triangle-bottom"></div>
+      </div>
+      <div id="moon">
+        <div class="shape">
+          <div class="star"></div>
+        </div>
+      </div>
+      <div id="sun"></div>
+    </div>
+
+    <div id="nepal-flag-left">
+      <div class="outer-triangle-top"></div>
+      <div class="outer-triangle-bottom"></div>
+      <div class="red_flag">
+        <div class="inner-triangle-top"></div>
+        <div class="inner-triangle-bottom"></div>
+      </div>
+      <div id="moon">
+        <div class="shape">
+          <div class="star"></div>
+        </div>
+      </div>
+      <div id="sun"></div>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>🔐 Face Registration Tool</h1>
+        <p>Admin Panel - Register Voter Face Data</p>
+      </header>
+
+      <nav>
+        <a href="../index.html">Home</a>
+        <a href="admin.html">Admin Dashboard</a>
+      </nav>
+
+      <main>
+        <div class="registration-container">
+          <div class="card">
+            <h2>Register Voter Face</h2>
+
+            <div
+              id="statusMessage"
+              class="status-message"
+              style="display: none"
+            ></div>
+
+            <!-- Voter Selection -->
+            <div class="form-group">
+              <label for="voterId">Select Voter ID *</label>
+              <input
+                type="text"
+                id="voterId"
+                placeholder="Enter Voter ID (e.g., 1378)"
+                required
+              />
+              <button
+                type="button"
+                id="loadVoterBtn"
+                class="btn btn-primary"
+                style="margin-top: 10px"
+              >
+                Load Voter Info
+              </button>
+            </div>
+
+            <div
+              id="voterInfo"
+              style="
+                display: none;
+                padding: 15px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                margin: 20px 0;
+              "
+            >
+              <h3 style="margin-top: 0">Voter Information</h3>
+              <p><strong>Name:</strong> <span id="voterName"></span></p>
+              <p>
+                <strong>Voter ID:</strong> <span id="voterIdDisplay"></span>
+              </p>
+              <p><strong>District:</strong> <span id="voterDistrict"></span></p>
+              <p><strong>Face Status:</strong> <span id="faceStatus"></span></p>
+            </div>
+
+            <!-- Camera Section -->
+            <div class="video-section">
+              <h3>Capture Face</h3>
+              <div class="video-wrapper">
+                <video id="videoElement" autoplay playsinline></video>
+                <canvas id="overlayCanvas"></canvas>
+              </div>
+              <canvas id="canvas" style="display: none"></canvas>
+
+              <div class="controls">
+                <button
+                  type="button"
+                  id="startCameraBtn"
+                  class="btn btn-primary"
+                >
+                  📷 Start Camera
+                </button>
+                <button
+                  type="button"
+                  id="stopCameraBtn"
+                  class="btn btn-secondary"
+                  style="display: none"
+                >
+                  ⏹ Stop Camera
+                </button>
+              </div>
+              <div
+                id="detectionStatus"
+                style="
+                  margin-top: 15px;
+                  padding: 10px;
+                  border-radius: 5px;
+                  background: #fff3cd;
+                  color: #856404;
+                  display: none;
+                "
+              >
+                <strong>👁️ Looking for face...</strong>
+              </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div id="previewSection" class="preview-section">
+              <h3>Captured Image</h3>
+              <img id="capturedImage" src="" alt="Captured face" />
+              <div class="controls">
+                <button type="button" id="retakeBtn" class="btn btn-secondary">
+                  ↻ Retake
+                </button>
+                <button type="button" id="registerBtn" class="btn btn-success">
+                  ✓ Register Face
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Voter List -->
+          <div class="card voter-list">
+            <h3>All Voters</h3>
+            <button type="button" id="loadVotersBtn" class="btn btn-primary">
+              Refresh Voter List
+            </button>
+            <div id="voterListContainer" style="margin-top: 20px"></div>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <p>Conceptualized By the Students of Everest Engineering College</p>
+      </footer>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script
+      async
+      src="https://docs.opencv.org/4.7.0/opencv.js"
+      onload="onOpenCvReady()"
+      type="text/javascript"
+    ></script>
+    <script>
+      const FACE_API_URL = "http://localhost:5001";
+      let cvReady = false;
+
+      let videoStream = null;
+      let capturedImageData = null;
+      let currentVoter = null;
+      let faceDetectionInterval = null;
+      let captureInProgress = false;
+      let faceCascade = null;
+
+      const videoElement = document.getElementById("videoElement");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const overlayCanvas = document.getElementById("overlayCanvas");
+      const overlayCtx = overlayCanvas.getContext("2d");
+      const capturedImage = document.getElementById("capturedImage");
+      const previewSection = document.getElementById("previewSection");
+      const detectionStatus = document.getElementById("detectionStatus");
+
+      // OpenCV.js ready callback
+      function onOpenCvReady() {
+        if (typeof cv === "undefined") {
+          console.error("OpenCV.js failed to load");
+          return;
+        }
+
+        // Wait for cv module to be ready
+        cv["onRuntimeInitialized"] = () => {
+          cvReady = true;
+          console.log("OpenCV.js is ready");
+          loadHaarCascade();
+        };
+      }
+
+      // Load Haar Cascade classifier
+      function loadHaarCascade() {
+        const faceCascadeFile = "haarcascade_frontalface_default.xml";
+        const url =
+          "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml";
+
+        let request = new XMLHttpRequest();
+        request.open("GET", url, true);
+        request.responseType = "arraybuffer";
+        request.onload = function () {
+          if (request.readyState === 4 && request.status === 200) {
+            try {
+              let data = new Uint8Array(request.response);
+              cv.FS_createDataFile(
+                "/",
+                faceCascadeFile,
+                data,
+                true,
+                false,
+                false,
+              );
+              faceCascade = new cv.CascadeClassifier();
+              faceCascade.load(faceCascadeFile);
+              console.log("Haar Cascade loaded successfully");
+            } catch (error) {
+              console.error("Error loading Haar Cascade:", error);
+              faceCascade = null;
+            }
+          } else {
+            console.error("Failed to download Haar Cascade file");
+          }
+        };
+        request.onerror = function () {
+          console.error("Network error while downloading Haar Cascade");
+        };
+        request.send();
+      }
+
+      // Show status message
+      function showStatus(message, type) {
+        const statusDiv = document.getElementById("statusMessage");
+        statusDiv.textContent = message;
+        statusDiv.className = `status-message ${type}`;
+        statusDiv.style.display = "block";
+
+        setTimeout(() => {
+          statusDiv.style.display = "none";
+        }, 5000);
+      }
+
+      // Load voter information
+      document
+        .getElementById("loadVoterBtn")
+        .addEventListener("click", async () => {
+          const voterId = document.getElementById("voterId").value.trim();
+
+          if (!voterId) {
+            showStatus("Please enter a Voter ID", "error");
+            return;
+          }
+
+          try {
+            showLoading(true);
+
+            const response = await fetch(`${API_BASE_URL}/voters`);
+            const result = await response.json();
+
+            if (!result.success) {
+              throw new Error("Failed to load voters");
+            }
+
+            const voter = result.data.find((v) => v.VoterId === voterId);
+
+            if (!voter) {
+              showStatus("Voter not found", "error");
+              document.getElementById("voterInfo").style.display = "none";
+              return;
+            }
+
+            currentVoter = voter;
+
+            // Display voter info
+            document.getElementById("voterName").textContent = voter.VoterName;
+            document.getElementById("voterIdDisplay").textContent =
+              voter.VoterId;
+            document.getElementById("voterDistrict").textContent =
+              voter.District;
+            document.getElementById("faceStatus").textContent = voter.FaceData
+              ? "✓ Registered"
+              : "✗ Not Registered";
+            document.getElementById("faceStatus").style.color = voter.FaceData
+              ? "#27ae60"
+              : "#e74c3c";
+
+            document.getElementById("voterInfo").style.display = "block";
+            showStatus("Voter loaded successfully", "success");
+          } catch (error) {
+            showStatus("Error: " + error.message, "error");
+          } finally {
+            showLoading(false);
+          }
+        });
+
+      // Start camera
+      document
+        .getElementById("startCameraBtn")
+        .addEventListener("click", async () => {
+          if (!currentVoter) {
+            showStatus("Please load a voter first", "error");
+            return;
+          }
+
+          try {
+            // Try to get external camera first
+            let videoConstraints = {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "user",
+            };
+
+            // Try to enumerate cameras to find external camera
+            try {
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              const videoDevices = devices.filter(
+                (device) => device.kind === "videoinput",
+              );
+
+              // Look for external camera (usually index 2 or last device)
+              if (videoDevices.length >= 3) {
+                videoConstraints.deviceId = { exact: videoDevices[2].deviceId };
+                console.log("Using external camera:", videoDevices[2].label);
+              } else if (videoDevices.length >= 2) {
+                videoConstraints.deviceId = {
+                  exact: videoDevices[videoDevices.length - 1].deviceId,
+                };
+                console.log(
+                  "Using camera:",
+                  videoDevices[videoDevices.length - 1].label,
+                );
+              }
+            } catch (enumError) {
+              console.warn(
+                "Could not enumerate devices, using default camera:",
+                enumError,
+              );
+            }
+
+            videoStream = await navigator.mediaDevices.getUserMedia({
+              video: videoConstraints,
+            });
+
+            videoElement.srcObject = videoStream;
+
+            document.getElementById("startCameraBtn").style.display = "none";
+            document.getElementById("stopCameraBtn").style.display =
+              "inline-block";
+            detectionStatus.style.display = "block";
+
+            showStatus(
+              "Camera started. Position the voter's face - it will capture automatically!",
+              "info",
+            );
+
+            // Start automatic face detection after video is ready
+            videoElement.onloadedmetadata = () => {
+              startFaceDetection();
+            };
+          } catch (error) {
+            showStatus("Error accessing camera: " + error.message, "error");
+          }
+        });
+
+      // Automatic face detection and capture
+      function startFaceDetection() {
+        detectionStatus.innerHTML = "<strong>👁️ Looking for face...</strong>";
+        detectionStatus.style.background = "#fff3cd";
+        detectionStatus.style.color = "#856404";
+
+        // Check for face every 500ms
+        faceDetectionInterval = setInterval(() => {
+          if (
+            !captureInProgress &&
+            videoElement.readyState === videoElement.HAVE_ENOUGH_DATA
+          ) {
+            detectAndCaptureFace();
+          }
+        }, 500);
+      }
+
+      async function detectAndCaptureFace() {
+        try {
+          // Update overlay canvas size to match video
+          overlayCanvas.width = videoElement.videoWidth;
+          overlayCanvas.height = videoElement.videoHeight;
+
+          // Draw current frame to canvas
+          canvas.width = videoElement.videoWidth;
+          canvas.height = videoElement.videoHeight;
+          ctx.drawImage(videoElement, 0, 0);
+
+          // Clear previous rectangles
+          overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+          // Simple face detection using canvas image data
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const faceRect = detectFaceInImage(imageData);
+
+          if (faceRect) {
+            // Draw rectangle around detected face
+            overlayCtx.strokeStyle = "#00ff00";
+            overlayCtx.lineWidth = 3;
+            overlayCtx.strokeRect(
+              faceRect.x,
+              faceRect.y,
+              faceRect.width,
+              faceRect.height,
+            );
+
+            // Draw label
+            overlayCtx.fillStyle = "#00ff00";
+            overlayCtx.font = "16px Arial";
+            overlayCtx.fillText("Face Detected", faceRect.x, faceRect.y - 10);
+
+            detectionStatus.innerHTML =
+              "<strong>✓ Face detected! Capturing...</strong>";
+            detectionStatus.style.background = "#d4edda";
+            detectionStatus.style.color = "#155724";
+
+            // Stop detection during capture
+            clearInterval(faceDetectionInterval);
+            captureInProgress = true;
+
+            // Capture after short delay for stability
+            setTimeout(() => {
+              performCapture();
+            }, 500);
+          }
+        } catch (error) {
+          console.error("Detection error:", error);
+        }
+      }
+
+      // Haar Cascade face detection using OpenCV.js
+      function detectFaceInImage(imageData) {
+        if (!cvReady || !faceCascade) {
+          console.log("OpenCV not ready yet, using fallback detection");
+          return detectFaceInImageFallback(imageData);
+        }
+
+        try {
+          // Create Mat from ImageData
+          let src = cv.matFromImageData(imageData);
+          let gray = new cv.Mat();
+
+          // Convert to grayscale
+          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+
+          // Detect faces
+          let faces = new cv.RectVector();
+          let msize = new cv.Size(0, 0);
+          faceCascade.detectMultiScale(gray, faces, 1.1, 3, 0, msize, msize);
+
+          let faceRect = null;
+          if (faces.size() > 0) {
+            const face = faces.get(0);
+            faceRect = {
+              x: face.x,
+              y: face.y,
+              width: face.width,
+              height: face.height,
+            };
+          }
+
+          // Clean up
+          src.delete();
+          gray.delete();
+          faces.delete();
+
+          return faceRect;
+        } catch (error) {
+          console.error("Haar Cascade detection error:", error);
+          return detectFaceInImageFallback(imageData);
+        }
+      }
+
+      // Fallback detection if OpenCV is not ready
+      function detectFaceInImageFallback(imageData) {
+        const data = imageData.data;
+        let brightPixels = 0;
+        let totalBrightness = 0;
+        const threshold = 100;
+        const sampleRate = 10;
+
+        for (let i = 0; i < data.length; i += 4 * sampleRate) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const brightness = (r + g + b) / 3;
+
+          totalBrightness += brightness;
+          if (brightness > threshold) {
+            brightPixels++;
+          }
+        }
+
+        const avgBrightness =
+          totalBrightness / (data.length / (4 * sampleRate));
+        const brightRatio = brightPixels / (data.length / (4 * sampleRate));
+
+        const hasFace =
+          avgBrightness > 60 &&
+          avgBrightness < 200 &&
+          brightRatio > 0.2 &&
+          brightRatio < 0.8;
+
+        // Return approximate center face rectangle
+        if (hasFace) {
+          return {
+            x: imageData.width * 0.25,
+            y: imageData.height * 0.2,
+            width: imageData.width * 0.5,
+            height: imageData.height * 0.6,
+          };
+        }
+        return null;
+      }
+
+      function performCapture() {
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        ctx.drawImage(videoElement, 0, 0);
+
+        capturedImageData = canvas.toDataURL("image/jpeg", 0.95);
+        capturedImage.src = capturedImageData;
+
+        previewSection.classList.add("active");
+        detectionStatus.style.display = "none";
+        showStatus(
+          "Face captured automatically! Review and register.",
+          "success",
+        );
+
+        // Stop camera after successful capture
+        stopCamera();
+      }
+
+      // Stop camera
+      document
+        .getElementById("stopCameraBtn")
+        .addEventListener("click", stopCamera);
+
+      function stopCamera() {
+        // Clear face detection interval
+        if (faceDetectionInterval) {
+          clearInterval(faceDetectionInterval);
+          faceDetectionInterval = null;
+        }
+
+        // Clear overlay
+        if (overlayCtx) {
+          overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        }
+
+        if (videoStream) {
+          videoStream.getTracks().forEach((track) => track.stop());
+          videoElement.srcObject = null;
+          videoStream = null;
+        }
+
+        captureInProgress = false;
+        document.getElementById("startCameraBtn").style.display =
+          "inline-block";
+        document.getElementById("stopCameraBtn").style.display = "none";
+        detectionStatus.style.display = "none";
+      }
+
+      // Retake
+      document.getElementById("retakeBtn").addEventListener("click", () => {
+        previewSection.classList.remove("active");
+        capturedImageData = null;
+        showStatus("Ready to capture again", "info");
+
+        // Restart camera for new capture
+        document.getElementById("startCameraBtn").click();
+      });
+
+      // Register face
+      document
+        .getElementById("registerBtn")
+        .addEventListener("click", async () => {
+          if (!capturedImageData || !currentVoter) {
+            showStatus("Please capture an image first", "error");
+            return;
+          }
+
+          try {
+            showLoading(true);
+
+            const response = await fetch(
+              `${FACE_API_URL}/api/face-recognition/register`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  voterId: currentVoter.VoterId,
+                  image: capturedImageData,
+                }),
+              },
+            );
+
+            const result = await response.json();
+
+            if (result.success) {
+              showStatus("✓ Face registered successfully!", "success");
+              previewSection.classList.remove("active");
+              stopCamera();
+
+              // Reload voter info
+              document.getElementById("loadVoterBtn").click();
+            } else {
+              showStatus("Error: " + result.message, "error");
+            }
+          } catch (error) {
+            showStatus("Error: " + error.message, "error");
+          } finally {
+            showLoading(false);
+          }
+        });
+
+      // Load all voters
+      document
+        .getElementById("loadVotersBtn")
+        .addEventListener("click", async () => {
+          try {
+            showLoading(true);
+
+            const response = await fetch(`${API_BASE_URL}/voters`);
+            const result = await response.json();
+
+            if (!result.success) {
+              throw new Error("Failed to load voters");
+            }
+
+            const container = document.getElementById("voterListContainer");
+            container.innerHTML = "";
+
+            result.data.forEach((voter) => {
+              const item = document.createElement("div");
+              item.className = `voter-item ${
+                voter.FaceData ? "registered" : "not-registered"
+              }`;
+              item.innerHTML = `
+                        <div>
+                            <strong>${voter.VoterName}</strong> (${
+                              voter.VoterId
+                            })
+                            <br>
+                            <small>${voter.District} - Area ${
+                              voter.AreaNo
+                            }</small>
+                        </div>
+                        <div>
+                            ${
+                              voter.FaceData
+                                ? "✓ Face Registered"
+                                : "✗ No Face Data"
+                            }
+                        </div>
+                    `;
+              container.appendChild(item);
+            });
+
+            showStatus(`Loaded ${result.data.length} voters`, "success");
+          } catch (error) {
+            showStatus("Error: " + error.message, "error");
+          } finally {
+            showLoading(false);
+          }
+        });
+
+      // Clean up on page unload
+      window.addEventListener("beforeunload", () => {
+        stopCamera();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "name": "voting-system-backend",
+  "version": "1.0.0",
+  "description": "Voting System Backend with PostgreSQL",
+  "keywords": [
+    "voting",
+    "election",
+    "postgresql",
+    "nodejs",
+    "express"
+  ],
+  "license": "ISC",
+  "author": "Shirish Tripathi",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "dev": "nodemon server.js",
+    "db:reset": "node config/syncDatabase.js",
+    "db:migrate": "node config/migrateDatabase.js",
+    "db:sync": "node config/migrateDatabase.js",
+    "db:seed": "sequelize-cli db:seed:all",
+    "blockchain:verify": "node verifyBlockchain.js",
+    "blockchain:recover": "node recoverFromBlockchain.js",
+    "contract:save": "node contractAddressManager.js --save",
+    "contract:verify": "node contractAddressManager.js --verify",
+    "contract:info": "node contractAddressManager.js --load"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.22.1",
+    "joi": "^18.0.2",
+    "multer": "^2.0.2",
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.35.2",
+    "web3": "^4.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11",
+    "sequelize-cli": "^6.6.2"
+  }
+}

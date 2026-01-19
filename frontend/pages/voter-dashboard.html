@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voter Dashboard</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <style>
+      .voter-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+      .voter-info-card h2 {
+        margin-bottom: 15px;
+      }
+      .voter-info-card p {
+        margin: 5px 0;
+        font-size: 16px;
+      }
+      .position-section {
+        margin-bottom: 40px;
+      }
+      .position-section h3 {
+        color: #667eea;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+      }
+      .candidate-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s;
+        gap: 20px;
+      }
+      .candidate-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+      .candidate-card.voted {
+        background: #d4edda;
+        border: 2px solid #28a745;
+      }
+      .candidate-image {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #667eea;
+        flex-shrink: 0;
+      }
+      .candidate-info {
+        flex: 1;
+      }
+      .party-logo-small {
+        width: 70px;
+        height: 70px;
+        object-fit: contain;
+        margin-left: 15px;
+        vertical-align: middle;
+        background: white;
+        padding: 5px;
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .party-name-with-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 5px 0;
+      }
+      .candidate-info h4 {
+        margin-bottom: 8px;
+        color: #333;
+      }
+      .candidate-info p {
+        margin: 3px 0;
+        color: #666;
+        font-size: 14px;
+      }
+      .vote-btn {
+        padding: 10px 25px;
+      }
+      .logout-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        float: right;
+      }
+      .logout-btn:hover {
+        background: #c82333;
+      }
+      .party-card {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        text-align: center;
+        transition: all 0.3s;
+      }
+      .party-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+      .party-card.voted {
+        background: #d4edda;
+        border: 2px solid #28a745;
+      }
+      .party-logo {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        margin: 0 auto 15px;
+        display: block;
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+      }
+      .vote-status {
+        display: inline-block;
+        padding: 5px 15px;
+        background: #28a745;
+        color: white;
+        border-radius: 20px;
+        font-size: 14px;
+        margin-left: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🗳️ Voter Dashboard</h1>
+        <p>Cast Your Vote Securely</p>
+      </header>
+
+      <main>
+        <div id="alert" class="alert"></div>
+        <div id="loading" class="loading" style="display: none"></div>
+
+        <!-- Voter Info Card -->
+        <div class="voter-info-card">
+          <h2>Welcome, <span id="voterName"></span>!</h2>
+          <p>
+            📍 District: <strong><span id="voterDistrict"></span></strong>
+          </p>
+          <p>
+            📋 Area Number: <strong><span id="voterArea"></span></strong>
+          </p>
+          <p>
+            🆔 Voter ID: <strong><span id="voterIdDisplay"></span></strong>
+          </p>
+          <p
+            style="
+              background: rgba(255, 255, 255, 0.2);
+              padding: 10px;
+              border-radius: 5px;
+              margin-top: 10px;
+            "
+          >
+            ⏰ Time Remaining:
+            <strong
+              ><span id="timeRemaining" style="color: #fff">15:00</span></strong
+            >
+          </p>
+        </div>
+
+        <!-- Direct Voting Section -->
+        <div id="directVotingSection">
+          <h2 style="margin-bottom: 20px">
+            📌 Vote for Candidates (Direct Voting)
+          </h2>
+          <div id="candidatesByPosition"></div>
+        </div>
+
+        <!-- Party Voting Section -->
+        <div id="partyVotingSection" style="margin-top: 50px">
+          <h2 style="margin-bottom: 20px">
+            🎯 Vote for Political Party (Indirect Voting)
+          </h2>
+          <p style="color: #666; margin-bottom: 20px">
+            ⚠️ You can vote for only ONE political party
+          </p>
+          <div id="partiesList"></div>
+        </div>
+      </main>
+
+      <footer>
+        <p>Conceptualized By the Students of Everest Engineering College</p>
+      </footer>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+      let voterInfo = null;
+      let votedPositions = new Set();
+      let votedCandidates = new Map(); // Track which candidate voted for each position
+      let votedPartyId = null; // Track which party was voted for
+      let hasVotedForParty = false;
+      let hasVotedForCandidate = false;
+      let sessionTimer = null;
+      let isVotingComplete = false;
+      const SESSION_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+      // ============================================
+      // VOTING SESSION LOCK MECHANISM
+      // ============================================
+
+      // Prevent browser back button
+      (function () {
+        window.history.pushState(null, "", window.location.href);
+        window.addEventListener("popstate", function () {
+          if (!isVotingComplete) {
+            window.history.pushState(null, "", window.location.href);
+            alert(
+              "⚠️ You cannot go back during voting! Please complete your voting process.",
+            );
+          }
+        });
+      })();
+
+      // Prevent page refresh
+      window.addEventListener("beforeunload", function (e) {
+        if (!isVotingComplete) {
+          e.preventDefault();
+          e.returnValue =
+            "⚠️ You are in the middle of voting. Are you sure you want to leave?";
+          return "⚠️ Unsaved voting data will be lost!";
+        }
+      });
+
+      // Prevent navigation to other pages
+      document.addEventListener(
+        "click",
+        function (e) {
+          if (!isVotingComplete) {
+            // Allow clicks on voting-related buttons
+            const target = e.target.closest("button, a");
+            if (target) {
+              const href = target.getAttribute("href");
+              const onclick = target.getAttribute("onclick");
+
+              // Allow internal voting page links and voting buttons
+              if (
+                href &&
+                !href.includes("voter-login.html") &&
+                !href.includes("results") &&
+                !href.includes("index.html")
+              ) {
+                // Check if it's a voting action
+                if (!href.includes("vote") && !href.includes("#")) {
+                  e.preventDefault();
+                  alert(
+                    "⚠️ You cannot navigate away from voting! Please complete your voting process.",
+                  );
+                }
+              }
+            }
+          }
+        },
+        true,
+      );
+
+      // Lock down page interactions during voting
+      function lockVotingSession() {
+        // Disable right-click context menu during voting
+        if (!isVotingComplete) {
+          document.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+            alert("⚠️ Context menu is disabled during voting.");
+            return false;
+          });
+        }
+      }
+
+      // Check if voter is logged in
+      function checkLogin() {
+        const stored = sessionStorage.getItem("voterInfo");
+        if (!stored) {
+          window.location.href = "voter-login.html";
+          return null;
+        }
+        return JSON.parse(stored);
+      }
+
+      // Check session timeout
+      function checkSessionTimeout() {
+        if (!voterInfo || !voterInfo.loginTime) return;
+
+        const currentTime = new Date().getTime();
+        const elapsedTime = currentTime - voterInfo.loginTime;
+        const remainingTime = SESSION_DURATION - elapsedTime;
+
+        // Update timer display
+        const minutes = Math.floor(remainingTime / 60000);
+        const seconds = Math.floor((remainingTime % 60000) / 1000);
+        const timerDisplay = document.getElementById("timeRemaining");
+
+        if (timerDisplay) {
+          timerDisplay.textContent = `${minutes}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
+
+          // Change color based on time remaining
+          if (remainingTime <= 2 * 60 * 1000) {
+            timerDisplay.style.color = "#ff6b6b"; // Red for last 2 minutes
+          } else if (remainingTime <= 5 * 60 * 1000) {
+            timerDisplay.style.color = "#ffd93d"; // Yellow for last 5 minutes
+          } else {
+            timerDisplay.style.color = "#fff"; // White
+          }
+        }
+
+        if (remainingTime <= 0) {
+          alert("Session expired! You have been logged out after 15 minutes.");
+          logout();
+          return;
+        }
+
+        // Show warning at 2 minutes remaining
+        if (remainingTime <= 2 * 60 * 1000 && remainingTime > 119000) {
+          showAlert(
+            "⚠️ Only 2 minutes remaining to complete your voting!",
+            "error",
+          );
+        }
+      }
+
+      // Check if voting is complete
+      function checkVotingComplete() {
+        if (hasVotedForCandidate && hasVotedForParty) {
+          isVotingComplete = true; // Unlock session
+          setTimeout(() => {
+            alert(
+              "✅ Thank you for voting! All your votes have been recorded. You will now be logged out.",
+            );
+            logout();
+          }, 1000);
+        }
+      }
+
+      // Logout function
+      function logout() {
+        if (sessionTimer) {
+          clearInterval(sessionTimer);
+        }
+        sessionStorage.removeItem("voterInfo");
+        window.location.href = "voter-login.html";
+      }
+
+      // Display voter info
+      function displayVoterInfo(voter) {
+        document.getElementById("voterName").textContent = voter.name;
+        document.getElementById("voterDistrict").textContent = voter.district;
+        document.getElementById("voterArea").textContent = voter.areaNo;
+        document.getElementById("voterIdDisplay").textContent = voter.voterId;
+      }
+
+      // Load candidates filtered by district and area
+      async function loadCandidates() {
+        try {
+          showLoading(true);
+          const result = await getAllCandidates();
+
+          // Filter candidates by district and area
+          const filteredCandidates = result.data.filter(
+            (c) =>
+              c.District === voterInfo.district &&
+              c.AreaNo === voterInfo.areaNo,
+          );
+
+          if (filteredCandidates.length === 0) {
+            document.getElementById("candidatesByPosition").innerHTML =
+              '<p style="text-align: center; color: #666; padding: 40px;">No candidates available in your district and area.</p>';
+            return;
+          }
+
+          // Group by position
+          const byPosition = {};
+          filteredCandidates.forEach((candidate) => {
+            if (!byPosition[candidate.CandidatePosition]) {
+              byPosition[candidate.CandidatePosition] = [];
+            }
+            byPosition[candidate.CandidatePosition].push(candidate);
+          });
+
+          displayCandidatesByPosition(byPosition);
+        } catch (error) {
+          showAlert("Error loading candidates: " + error.message, "error");
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      // Display candidates grouped by position
+      function displayCandidatesByPosition(byPosition) {
+        const container = document.getElementById("candidatesByPosition");
+        container.innerHTML = "";
+
+        Object.keys(byPosition).forEach((position) => {
+          const section = document.createElement("div");
+          section.className = "position-section";
+
+          const hasVoted = votedPositions.has(position);
+          const statusHtml = hasVoted
+            ? '<span class="vote-status">✓ Voted</span>'
+            : "";
+
+          section.innerHTML = `
+                    <h3>${position} ${statusHtml}</h3>
+                    <div id="position-${position.replace(/\s+/g, "-")}"></div>
+                `;
+          container.appendChild(section);
+
+          const positionContainer = document.getElementById(
+            `position-${position.replace(/\s+/g, "-")}`,
+          );
+
+          byPosition[position].forEach((candidate) => {
+            const card = document.createElement("div");
+            const isThisVoted = votedCandidates.get(position) === candidate.id;
+            card.className = isThisVoted
+              ? "candidate-card voted"
+              : hasVoted
+                ? "candidate-card"
+                : "candidate-card";
+
+            const candidateImageUrl = candidate.CandidateImage
+              ? `http://localhost:5500${candidate.CandidateImage}`
+              : "../images/default-avatar.png";
+
+            const partyLogoUrl = candidate.CandidateElectionLogo
+              ? `http://localhost:5500${candidate.CandidateElectionLogo}`
+              : "";
+
+            card.innerHTML = `
+                        <img src="${candidateImageUrl}" alt="${
+                          candidate.CandidateName
+                        }" class="candidate-image" onerror="this.src='../images/default-avatar.png'">
+                        <div class="candidate-info">
+                            <h4>${candidate.CandidateName}</h4>
+                            <div class="party-name-with-logo">
+                                <span><strong>Party:</strong> ${
+                                  candidate.CandidateParty
+                                }</span>
+                                ${
+                                  partyLogoUrl
+                                    ? `<img src="${partyLogoUrl}" alt="${candidate.CandidateParty} Logo" class="party-logo-small" onerror="this.style.display='none'" title="${candidate.CandidateParty}">`
+                                    : ""
+                                }
+                            </div>
+                            <p><strong>Position:</strong> ${
+                              candidate.CandidatePosition
+                            }</p>
+                        </div>
+                        ${
+                          isThisVoted
+                            ? '<span class="btn btn-success" style="font-size: 16px;">✓ You have voted this</span>'
+                            : hasVoted
+                              ? '<button class="btn" disabled style="opacity: 0.5; cursor: not-allowed;">Voting Closed</button>'
+                              : `<button class="btn btn-primary vote-btn" onclick="voteForCandidate(${candidate.id}, '${position}')">Vote</button>`
+                        }
+                    `;
+            positionContainer.appendChild(card);
+          });
+        });
+      }
+
+      // Vote for candidate
+      async function voteForCandidate(candidateId, position) {
+        if (votedPositions.has(position)) {
+          showAlert("You have already voted for this position!", "error");
+          return;
+        }
+
+        if (!confirm(`Are you sure you want to vote for this candidate?`)) {
+          return;
+        }
+
+        try {
+          showLoading(true);
+
+          const voteData = {
+            voter_id: voterInfo.id,
+            candidate_id: candidateId,
+            district: voterInfo.district,
+            area_no: voterInfo.areaNo,
+          };
+
+          const result = await castVote(voteData);
+
+          showAlert(
+            "Vote cast successfully! Transaction Hash: " +
+              result.data.blockchain.transactionHash,
+            "success",
+          );
+
+          // Mark position as voted and store which candidate
+          votedPositions.add(position);
+          votedCandidates.set(position, candidateId);
+          hasVotedForCandidate = true;
+
+          // Check if voting is complete
+          checkVotingComplete();
+
+          // Reload candidates to update UI
+          await loadCandidates();
+        } catch (error) {
+          // Check if error is specifically about already voted
+          if (
+            error.message.toLowerCase().includes("already voted") ||
+            error.message.toLowerCase().includes("voter has already voted")
+          ) {
+            showAlert(
+              "🚨 CRITICAL VIOLATION: You have already voted but you have visited again in Voting Portal. This is a CRIME! Alert has been sent to Authority regarding your crime. Legal action may be taken against you.",
+              "error",
+            );
+          } else {
+            showAlert("Error casting vote: " + error.message, "error");
+          }
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      // Load parties filtered by district and area
+      async function loadParties() {
+        try {
+          showLoading(true);
+          const result = await getAllParties();
+
+          // Filter parties by district and area
+          const filteredParties = result.data.filter(
+            (p) =>
+              p.District === voterInfo.district &&
+              p.AreaNo === voterInfo.areaNo,
+          );
+
+          if (filteredParties.length === 0) {
+            document.getElementById("partiesList").innerHTML =
+              '<p style="text-align: center; color: #666; padding: 40px;">No parties available in your district and area.</p>';
+            return;
+          }
+
+          displayParties(filteredParties);
+        } catch (error) {
+          showAlert("Error loading parties: " + error.message, "error");
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      // Display parties
+      function displayParties(parties) {
+        const container = document.getElementById("partiesList");
+        container.innerHTML = "";
+
+        parties.forEach((party) => {
+          const card = document.createElement("div");
+          const isThisVoted = votedPartyId === party.id;
+          card.className = isThisVoted ? "party-card voted" : "party-card";
+
+          const partyLogoUrl = party.PartyLogo
+            ? `http://localhost:5500${party.PartyLogo}`
+            : "../images/default-party.png";
+
+          card.innerHTML = `
+                    <img src="${partyLogoUrl}" alt="${
+                      party.PartyName
+                    }" class="party-logo" onerror="this.src='../images/default-party.png'">
+                    <h3>${party.PartyName}</h3>
+                    ${
+                      isThisVoted
+                        ? '<button class="btn btn-success" style="margin-top: 15px; font-size: 16px;">✓ You have voted this</button>'
+                        : hasVotedForParty
+                          ? '<button class="btn" disabled style="margin-top: 15px; opacity: 0.5; cursor: not-allowed;">Voting Closed</button>'
+                          : `<button class="btn btn-success" style="margin-top: 15px;" onclick="voteForParty(${party.id})">Vote for this Party</button>`
+                    }
+                `;
+          container.appendChild(card);
+        });
+      }
+
+      // Vote for party
+      async function voteForParty(partyId) {
+        if (hasVotedForParty) {
+          showAlert("You have already voted for a party!", "error");
+          return;
+        }
+
+        if (
+          !confirm(
+            "Are you sure you want to vote for this party? You can only vote once.",
+          )
+        ) {
+          return;
+        }
+
+        try {
+          showLoading(true);
+
+          const voteData = {
+            voter_id: voterInfo.id,
+            party_id: partyId,
+            district: voterInfo.district,
+            area_no: voterInfo.areaNo,
+          };
+
+          const result = await castPartyVote(voteData);
+
+          showAlert(
+            "Party vote cast successfully! Transaction Hash: " +
+              result.data.blockchain.transactionHash,
+            "success",
+          );
+
+          // Mark as voted and store which party
+          hasVotedForParty = true;
+          votedPartyId = partyId;
+
+          // Check if voting is complete
+          checkVotingComplete();
+
+          // Reload parties to update UI
+          await loadParties();
+        } catch (error) {
+          // Check if error is specifically about already voted
+          if (
+            error.message.toLowerCase().includes("already voted") ||
+            error.message.toLowerCase().includes("voter has already voted")
+          ) {
+            showAlert(
+              "🚨 CRITICAL VIOLATION: You have already voted but you have visited again in Voting Portal. This is a CRIME! Alert has been sent to Authority regarding your crime. Legal action may be taken against you.",
+              "error",
+            );
+          } else {
+            showAlert("Error casting party vote: " + error.message, "error");
+          }
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      // Check vote status
+      async function checkVoteStatus() {
+        try {
+          // Check direct vote status
+          const voteStatus = await checkVoterStatus(voterInfo.id);
+          if (voteStatus.data && voteStatus.data.hasVoted) {
+            // Mark positions as voted based on database
+            // This is a simplified version - you might need to enhance this
+          }
+
+          // Check party vote status
+          const partyStatus = await checkPartyVoteStatus(voterInfo.id);
+          if (partyStatus.data && partyStatus.data.hasVoted) {
+            hasVotedForParty = true;
+          }
+        } catch (error) {
+          console.error("Error checking vote status:", error);
+        }
+      }
+
+      // Initialize
+      async function init() {
+        voterInfo = checkLogin();
+        if (!voterInfo) return;
+
+        // LOCK VOTING SESSION - prevent back/refresh/navigation
+        lockVotingSession();
+
+        displayVoterInfo(voterInfo);
+        await checkVoteStatus();
+        await loadCandidates();
+        await loadParties();
+
+        // Start session timeout checker (check every second for accurate timer)
+        sessionTimer = setInterval(() => {
+          checkSessionTimeout();
+        }, 1000);
+
+        // Initial timeout check
+        checkSessionTimeout();
+      }
+
+      init();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vote for Candidate</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🗳️ Vote for Candidate</h1>
+        <p>Direct Voting</p>
+      </header>
+
+      <nav>
+        <a href="../index.html">Home</a>
+        <a href="vote-party.html">Vote for Party</a>
+        <a href="results.html">Results</a>
+      </nav>
+
+      <main>
+        <div id="alert" class="alert"></div>
+        <div id="loading" class="loading" style="display: none"></div>
+
+        <div class="form-container">
+          <div class="card">
+            <h2>Cast Your Vote</h2>
+            <form id="voteForm">
+              <div class="form-group">
+                <label for="voterId">Your Voter ID *</label>
+                <input
+                  type="number"
+                  id="voterId"
+                  required
+                  placeholder="Enter your voter ID"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="position">Select Position *</label>
+                <select id="position" required>
+                  <option value="">-- Select Position --</option>
+                  <option value="Mayor">Mayor</option>
+                  <option value="Council Member">Council Member</option>
+                  <option value="Governor">Governor</option>
+                  <option value="Senator">Senator</option>
+                </select>
+              </div>
+
+              <div id="candidatesList" class="form-group" style="display: none">
+                <label>Select Candidate *</label>
+                <div id="candidatesContainer"></div>
+              </div>
+
+              <div class="form-group">
+                <label for="electionAreaId">Election Area ID *</label>
+                <input
+                  type="number"
+                  id="electionAreaId"
+                  required
+                  placeholder="Enter election area ID"
+                  value="1"
+                />
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%">
+                Cast Vote
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h3>Voting Instructions</h3>
+          <div class="steps">
+            <div class="step">
+              <span class="step-number">1</span>
+              <p>Enter your Voter ID</p>
+            </div>
+            <div class="step">
+              <span class="step-number">2</span>
+              <p>Select the position</p>
+            </div>
+            <div class="step">
+              <span class="step-number">3</span>
+              <p>Choose your candidate</p>
+            </div>
+            <div class="step">
+              <span class="step-number">4</span>
+              <p>Submit your vote</p>
+            </div>
+          </div>
+          <p style="text-align: center; margin-top: 20px; color: #666">
+            ⚠️ You can only vote once per position. Your vote will be recorded
+            on the blockchain.
+          </p>
+        </div>
+      </main>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+      let candidates = [];
+
+      // Load candidates when position is selected
+      document
+        .getElementById("position")
+        .addEventListener("change", async (e) => {
+          const position = e.target.value;
+          if (!position) {
+            document.getElementById("candidatesList").style.display = "none";
+            return;
+          }
+
+          try {
+            showLoading(true);
+            const result = await getAllCandidates();
+            candidates = result.data;
+
+            // Filter by position
+            const filteredCandidates = candidates.filter(
+              (c) => c.CandidatePosition === position
+            );
+
+            const container = document.getElementById("candidatesContainer");
+            container.innerHTML = "";
+
+            if (filteredCandidates.length === 0) {
+              container.innerHTML =
+                '<p style="color: #dc3545;">No candidates available for this position</p>';
+            } else {
+              filteredCandidates.forEach((candidate) => {
+                const div = document.createElement("div");
+                div.className = "candidate-item";
+                div.innerHTML = `
+                            <label style="display: flex; align-items: center; cursor: pointer; width: 100%;">
+                                <input type="radio" name="candidate" value="${candidate.id}" style="margin-right: 10px;">
+                                <div>
+                                    <strong>${candidate.CandidateName}</strong><br>
+                                    <small style="color: #666;">Party: ${candidate.CandidateParty}</small>
+                                </div>
+                            </label>
+                        `;
+                container.appendChild(div);
+              });
+            }
+
+            document.getElementById("candidatesList").style.display = "block";
+          } catch (error) {
+            showAlert("Error loading candidates: " + error.message, "error");
+          } finally {
+            showLoading(false);
+          }
+        });
+
+      // Handle form submission
+      document
+        .getElementById("voteForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const voterId = parseInt(document.getElementById("voterId").value);
+          const candidateRadio = document.querySelector(
+            'input[name="candidate"]:checked'
+          );
+          const electionAreaId = parseInt(
+            document.getElementById("electionAreaId").value
+          );
+
+          if (!candidateRadio) {
+            showAlert("Please select a candidate", "error");
+            return;
+          }
+
+          const candidateId = parseInt(candidateRadio.value);
+
+          try {
+            showLoading(true);
+
+            const voteData = {
+              voter_id: voterId,
+              candidate_id: candidateId,
+              election_area_id: electionAreaId,
+            };
+
+            const result = await castVote(voteData);
+
+            showAlert(
+              "Vote cast successfully! Transaction Hash: " +
+                result.data.blockchain.transactionHash,
+              "success"
+            );
+
+            // Reset form
+            document.getElementById("voteForm").reset();
+            document.getElementById("candidatesList").style.display = "none";
+
+            // Redirect to results after 3 seconds
+            setTimeout(() => {
+              window.location.href = "results.html";
+            }, 3000);
+          } catch (error) {
+            showAlert("Error casting vote: " + error.message, "error");
+          } finally {
+            showLoading(false);
+          }
+        });
+    </script>
+  </body>
+</html>

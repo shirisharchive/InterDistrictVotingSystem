@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Election Results</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>📊 Election Results</h1>
+        <p>Real-time Results from Blockchain</p>
+      </header>
+
+      <nav>
+        <a href="../index.html">Home</a>
+        <a href="admin.html">Admin Panel</a>
+      </nav>
+
+      <main>
+        <div id="alert" class="alert"></div>
+        <div id="loading" class="loading" style="display: none"></div>
+
+        <div class="results-grid">
+          <!-- Candidate Results -->
+          <div class="result-card">
+            <h3>🗳️ Direct Voting Results (By Position)</h3>
+            <div id="candidateResults"></div>
+          </div>
+
+          <!-- Party Results -->
+          <div class="result-card">
+            <h3>🎯 Party Voting Results</h3>
+            <div id="partyResults"></div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px">
+          <button onclick="loadResults()" class="btn btn-primary">
+            🔄 Refresh Results
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+      async function loadResults() {
+        try {
+          showLoading(true);
+
+          // Load candidate results
+          const candidateResult = await getAllCandidatesWithResults();
+          displayCandidateResults(candidateResult.data);
+
+          // Load party results
+          const partyResult = await getAllPartiesWithResults();
+          displayPartyResults(partyResult.data);
+        } catch (error) {
+          showAlert("Error loading results: " + error.message, "error");
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      function displayCandidateResults(candidates) {
+        const container = document.getElementById("candidateResults");
+
+        if (candidates.length === 0) {
+          container.innerHTML =
+            '<p style="text-align: center; color: #666;">No candidates yet</p>';
+          return;
+        }
+
+        // Group by position
+        const byPosition = {};
+        candidates.forEach((candidate) => {
+          if (!byPosition[candidate.position]) {
+            byPosition[candidate.position] = [];
+          }
+          byPosition[candidate.position].push(candidate);
+        });
+
+        // Sort by votes within each position
+        Object.keys(byPosition).forEach((position) => {
+          byPosition[position].sort((a, b) => b.voteCount - a.voteCount);
+        });
+
+        let html = "";
+        Object.keys(byPosition).forEach((position) => {
+          html += `<h4 style="margin: 20px 0 10px 0; color: #667eea;">${position}</h4>`;
+          byPosition[position].forEach((candidate, index) => {
+            const isLeading = index === 0 && candidate.voteCount > 0;
+            html += `
+                        <div class="candidate-item" style="${
+                          isLeading ? "border-left: 4px solid #28a745;" : ""
+                        }">
+                            <div class="candidate-info">
+                                <strong>${candidate.name}</strong>
+                                ${
+                                  isLeading
+                                    ? '<span style="color: #28a745; margin-left: 10px;">🏆 Leading</span>'
+                                    : ""
+                                }
+                                <br>
+                                <small style="color: #666;">Party: ${
+                                  candidate.party
+                                }</small>
+                            </div>
+                            <div class="vote-count">${
+                              candidate.voteCount
+                            } votes</div>
+                        </div>
+                    `;
+          });
+        });
+
+        container.innerHTML = html;
+      }
+
+      function displayPartyResults(parties) {
+        const container = document.getElementById("partyResults");
+
+        if (parties.length === 0) {
+          container.innerHTML =
+            '<p style="text-align: center; color: #666;">No parties yet</p>';
+          return;
+        }
+
+        // Sort by votes
+        parties.sort((a, b) => b.voteCount - a.voteCount);
+
+        let html = "";
+        parties.forEach((party, index) => {
+          const isLeading = index === 0 && party.voteCount > 0;
+          html += `
+                    <div class="party-item" style="${
+                      isLeading ? "border-left: 4px solid #28a745;" : ""
+                    }">
+                        <div class="party-info">
+                            <strong style="font-size: 1.2em;">${
+                              party.partyName
+                            }</strong>
+                            ${
+                              isLeading
+                                ? '<span style="color: #28a745; margin-left: 10px;">🏆 Leading</span>'
+                                : ""
+                            }
+                        </div>
+                        <div class="vote-count">${party.voteCount} votes</div>
+                    </div>
+                `;
+        });
+
+        container.innerHTML = html;
+      }
+
+      // Load results on page load
+      loadResults();
+
+      // Auto-refresh every 30 seconds
+      setInterval(loadResults, 30000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>⚙️ Admin Panel</h1>
+        <p>Manage Voters, Candidates & Parties</p>
+      </header>
+
+      <nav>
+        <a href="admin-dashboard.html">Admin Dashboard</a>
+      </nav>
+
+      <main>
+        <div id="alert" class="alert"></div>
+        <div id="loading" class="loading" style="display: none"></div>
+
+        <div class="admin-tabs">
+          <button class="tab active" data-tab="register-voter">
+            Register Voter
+          </button>
+          <button class="tab" data-tab="register-candidate">
+            Register Candidate
+          </button>
+          <button class="tab" data-tab="register-party">Register Party</button>
+          <button class="tab" data-tab="blockchain-data">
+            Blockchain Data
+          </button>
+          <button class="tab" data-tab="view-all">View All</button>
+        </div>
+
+        <!-- Register Voter Tab -->
+        <div id="register-voter" class="tab-content active">
+          <div class="form-container">
+            <h2>Register New Voter</h2>
+            <form id="voterForm">
+              <div class="form-group">
+                <label for="voterName">Voter Name *</label>
+                <input
+                  type="text"
+                  id="voterName"
+                  required
+                  placeholder="Full name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="voterIdNum">Voter ID Number *</label>
+                <input
+                  type="text"
+                  id="voterIdNum"
+                  required
+                  placeholder="Unique voter ID"
+                />
+              </div>
+              <div class="form-group">
+                <label for="voterDob">Date of Birth *</label>
+                <input
+                  type="date"
+                  id="voterDob"
+                  required
+                  placeholder="YYYY-MM-DD"
+                />
+              </div>
+              <div class="form-group">
+                <label>Voter Photo *</label>
+                <!-- Photo Guidelines Info Box -->
+                <div
+                  style="
+                    background: #e3f2fd;
+                    border: 2px solid #2196f3;
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    font-size: 13px;
+                    color: #1565c0;
+                  "
+                >
+                  <strong>📸 Photo Guidelines:</strong><br />
+                  ✓ Face must be clearly visible<br />
+                  ✓ Good lighting (avoid shadows)<br />
+                  ✓ Face the camera directly<br />
+                  ✓ No sunglasses or large hats<br />
+                  ✓ Head should be straight (not tilted)
+                </div>
+                <div style="margin-top: 10px; margin-bottom: 10px">
+                  <label
+                    for="cameraSelect"
+                    style="
+                      display: block;
+                      margin-bottom: 8px;
+                      font-weight: 500;
+                      color: #333;
+                    "
+                  >
+                    📹 Select Camera
+                  </label>
+                  <select
+                    id="cameraSelect"
+                    style="
+                      width: 100%;
+                      padding: 10px;
+                      border: 2px solid #ddd;
+                      border-radius: 8px;
+                      font-size: 14px;
+                    "
+                  >
+                    <option value="1">📱 Built-in Camera</option>
+                    <option value="0" selected>📷 External Camera</option>
+                  </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px">
+                  <button
+                    type="button"
+                    id="capturePhotoBtn"
+                    class="btn btn-secondary"
+                    style="flex: 1"
+                  >
+                    📷 Capture Photo
+                  </button>
+                  <button
+                    type="button"
+                    id="uploadPhotoBtn"
+                    class="btn btn-secondary"
+                    style="flex: 1"
+                  >
+                    📁 Upload Photo
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  id="photoUpload"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  style="display: none"
+                />
+                <div id="photoPreview" style="margin-top: 10px; display: none">
+                  <img
+                    id="previewImage"
+                    alt="Voter Photo Preview"
+                    style="
+                      width: 100%;
+                      max-height: 300px;
+                      border-radius: 8px;
+                      border: 2px solid #ddd;
+                      object-fit: contain;
+                      background: #f8f9fa;
+                    "
+                  />
+                  <button
+                    type="button"
+                    id="removePhotoBtn"
+                    class="btn btn-danger"
+                    style="margin-top: 10px; width: 100%"
+                  >
+                    ✕ Remove Photo
+                  </button>
+                </div>
+                <video
+                  id="voterCamera"
+                  autoplay
+                  style="
+                    width: 100%;
+                    max-height: 300px;
+                    border-radius: 8px;
+                    display: none;
+                    margin-top: 10px;
+                  "
+                ></video>
+                <div
+                  id="cameraCaptureButtons"
+                  style="display: none; gap: 10px; margin-top: 10px"
+                >
+                  <button
+                    type="button"
+                    id="takePhotoBtn"
+                    class="btn btn-primary"
+                    style="flex: 1"
+                  >
+                    📸 Take Photo
+                  </button>
+                  <button
+                    type="button"
+                    id="cancelCameraBtn"
+                    class="btn btn-secondary"
+                    style="flex: 1"
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+                <canvas id="photoCanvas" style="display: none"></canvas>
+              </div>
+              <div class="form-group">
+                <label for="district">District *</label>
+                <input
+                  type="text"
+                  id="district"
+                  required
+                  placeholder="e.g., District 1"
+                />
+              </div>
+              <div class="form-group">
+                <label for="areaNo">Area Number *</label>
+                <input
+                  type="number"
+                  id="areaNo"
+                  required
+                  placeholder="e.g., 1"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%">
+                Register Voter
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Register Candidate Tab -->
+        <div id="register-candidate" class="tab-content">
+          <div class="form-container">
+            <h2>Register New Candidate</h2>
+            <form id="candidateForm">
+              <div class="form-group">
+                <label for="candidateName">Candidate Name *</label>
+                <input
+                  type="text"
+                  id="candidateName"
+                  required
+                  placeholder="Full name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="candidateParty">Political Party *</label>
+                <input
+                  type="text"
+                  id="candidateParty"
+                  required
+                  placeholder="Party name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="candidatePosition">Position *</label>
+                <select id="candidatePosition" required>
+                  <option value="">-- Select Position --</option>
+                  <option value="National Assembly">National Assembly</option>
+                  <option value="Council Member">Council Member</option>
+                  <!-- <option value="Governor"</option>
+                  <option value="Senator"></option> -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="candidatePhoto">Candidate Photo</label>
+                <div class="file-upload-area" id="candidatePhotoUpload">
+                  <input
+                    type="file"
+                    id="candidatePhoto"
+                    accept="image/*"
+                    style="display: none"
+                  />
+                  <div class="upload-placeholder">
+                    <p>📷 Drag & Drop photo here or click to browse</p>
+                    <small>Supports: JPG, PNG, GIF (Max 5MB)</small>
+                  </div>
+                  <div class="preview-container" style="display: none">
+                    <img class="preview-image" alt="Preview" />
+                    <button type="button" class="btn-remove">✕ Remove</button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="partyLogo">Party Logo</label>
+                <div class="file-upload-area" id="partyLogoUpload">
+                  <input
+                    type="file"
+                    id="partyLogo"
+                    accept="image/*"
+                    style="display: none"
+                  />
+                  <div class="upload-placeholder">
+                    <p>🎨 Drag & Drop logo here or click to browse</p>
+                    <small>Supports: JPG, PNG, GIF (Max 5MB)</small>
+                  </div>
+                  <div class="preview-container" style="display: none">
+                    <img class="preview-image" alt="Preview" />
+                    <button type="button" class="btn-remove">✕ Remove</button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="candidateDistrict">District *</label>
+                <input
+                  type="text"
+                  id="candidateDistrict"
+                  required
+                  placeholder="e.g., District 1"
+                />
+              </div>
+              <div class="form-group">
+                <label for="candidateAreaNo">Area Number *</label>
+                <input
+                  type="number"
+                  id="candidateAreaNo"
+                  required
+                  placeholder="e.g., 1"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%">
+                Register Candidate
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Register Party Tab -->
+        <div id="register-party" class="tab-content">
+          <div class="form-container">
+            <h2>Register New Party</h2>
+            <form id="partyForm">
+              <div class="form-group">
+                <label for="partyName">Party Name *</label>
+                <input
+                  type="text"
+                  id="partyName"
+                  required
+                  placeholder="Political party name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="partyLogoUrl">Party Logo</label>
+                <div class="file-upload-area" id="partyLogoUrlUpload">
+                  <input
+                    type="file"
+                    id="partyLogoUrl"
+                    accept="image/*"
+                    style="display: none"
+                  />
+                  <div class="upload-placeholder">
+                    <p>🎨 Drag & Drop logo here or click to browse</p>
+                    <small>Supports: JPG, PNG, GIF (Max 5MB)</small>
+                  </div>
+                  <div class="preview-container" style="display: none">
+                    <img class="preview-image" alt="Preview" />
+                    <button type="button" class="btn-remove">✕ Remove</button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="partyDistrict">District *</label>
+                <input
+                  type="text"
+                  id="partyDistrict"
+                  required
+                  placeholder="e.g., District 1"
+                />
+              </div>
+              <div class="form-group">
+                <label for="partyAreaNo">Area Number *</label>
+                <input
+                  type="number"
+                  id="partyAreaNo"
+                  required
+                  placeholder="e.g., 1"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%">
+                Register Party
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Blockchain Data Tab -->
+        <div id="blockchain-data" class="tab-content">
+          <div class="form-container">
+            <h2>🔗 Blockchain Data Viewer</h2>
+            <p style="color: #666; margin-bottom: 20px">
+              View voting data stored on the blockchain by entering the smart
+              contract address
+            </p>
+
+            <div class="form-group">
+              <label for="contractAddress">Smart Contract Address</label>
+              <input
+                type="text"
+                id="contractAddress"
+                placeholder="0x..."
+                style="font-family: monospace"
+              />
+              <small style="color: #666"
+                >Leave empty to use default contract address</small
+              >
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 30px">
+              <button onclick="fetchBlockchainData()" class="btn btn-primary">
+                📊 Fetch Blockchain Data
+              </button>
+              <button onclick="clearBlockchainData()" class="btn btn-secondary">
+                🗑️ Clear
+              </button>
+            </div>
+
+            <!-- Filters -->
+            <div
+              style="
+                display: flex;
+                gap: 15px;
+                margin-bottom: 20px;
+                display: none;
+              "
+              id="blockchainFilters"
+            >
+              <div class="form-group" style="flex: 1">
+                <label for="filterDistrict">Filter by District</label>
+                <select id="filterDistrict" onchange="applyBlockchainFilters()">
+                  <option value="">All Districts</option>
+                </select>
+              </div>
+              <div class="form-group" style="flex: 1">
+                <label for="filterArea">Filter by Area</label>
+                <select id="filterArea" onchange="applyBlockchainFilters()">
+                  <option value="">All Areas</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Voting Statistics -->
+            <div
+              id="blockchainStats"
+              style="display: none; margin-bottom: 30px"
+            >
+              <h3>📈 Voting Statistics</h3>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                  gap: 15px;
+                "
+              >
+                <div class="stat-card">
+                  <h4>Total Voters</h4>
+                  <p
+                    id="totalVoters"
+                    style="font-size: 24px; font-weight: bold; color: #667eea"
+                  >
+                    0
+                  </p>
+                </div>
+                <div class="stat-card">
+                  <h4>Total Candidates</h4>
+                  <p
+                    id="totalCandidates"
+                    style="font-size: 24px; font-weight: bold; color: #667eea"
+                  >
+                    0
+                  </p>
+                </div>
+                <div class="stat-card">
+                  <h4>Total Votes Cast</h4>
+                  <p
+                    id="totalVotes"
+                    style="font-size: 24px; font-weight: bold; color: #667eea"
+                  >
+                    0
+                  </p>
+                </div>
+                <div class="stat-card">
+                  <h4>Total Parties</h4>
+                  <p
+                    id="totalParties"
+                    style="font-size: 24px; font-weight: bold; color: #667eea"
+                  >
+                    0
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Candidates Vote Results -->
+            <div
+              id="candidateVotesTable"
+              style="display: none; margin-bottom: 30px"
+            >
+              <h3>🗳️ Candidate Voting Results</h3>
+              <div style="overflow-x: auto">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Candidate ID</th>
+                      <th>Name</th>
+                      <th>Party</th>
+                      <th>Position</th>
+                      <th>District</th>
+                      <th>Area</th>
+                      <th>Vote Count</th>
+                    </tr>
+                  </thead>
+                  <tbody id="candidateVotesBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Party Vote Results -->
+            <div
+              id="partyVotesTable"
+              style="display: none; margin-bottom: 30px"
+            >
+              <h3>🎯 Party Voting Results</h3>
+              <div style="overflow-x: auto">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Party ID</th>
+                      <th>Party Name</th>
+                      <th>District</th>
+                      <th>Area</th>
+                      <th>Vote Count</th>
+                    </tr>
+                  </thead>
+                  <tbody id="partyVotesBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Vote Details -->
+            <div id="voteDetailsTable" style="display: none">
+              <h3>📋 Vote Details from Database</h3>
+              <div style="overflow-x: auto">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Voter ID</th>
+                      <th>Candidate ID</th>
+                      <th>District</th>
+                      <th>Area</th>
+                      <th>Vote Time</th>
+                      <th>Transaction Hash</th>
+                    </tr>
+                  </thead>
+                  <tbody id="voteDetailsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View All Tab -->
+        <div id="view-all" class="tab-content">
+          <h2>View All Records</h2>
+          <div style="margin-bottom: 30px">
+            <h3>Voters</h3>
+            <div id="votersList"></div>
+          </div>
+          <div style="margin-bottom: 30px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <h3>Candidates</h3>
+              <button
+                onclick="syncCandidatesToBlockchain()"
+                class="btn btn-primary"
+                style="padding: 8px 16px"
+              >
+                🔄 Sync to Blockchain
+              </button>
+            </div>
+            <div id="candidatesList"></div>
+          </div>
+          <div>
+            <h3>Parties</h3>
+            <div id="partiesList"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+      // Handle URL parameters to show specific tab
+      window.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get("tab");
+
+        if (tab) {
+          // Hide all tab buttons except the active one
+          const allTabs = document.querySelectorAll(".admin-tabs .tab");
+          const allContents = document.querySelectorAll(".tab-content");
+
+          // Show only the requested tab
+          allTabs.forEach((btn) => {
+            if (btn.getAttribute("data-tab") === tab) {
+              btn.classList.add("active");
+              btn.style.display = "inline-block";
+            } else {
+              btn.classList.remove("active");
+              btn.style.display = "none";
+            }
+          });
+
+          allContents.forEach((content) => {
+            if (content.id === tab) {
+              content.classList.add("active");
+            } else {
+              content.classList.remove("active");
+            }
+          });
+        }
+      });
+
+      // File upload handling with drag and drop
+      function setupFileUpload(uploadAreaId, fileInputId) {
+        const uploadArea = document.getElementById(uploadAreaId);
+        const fileInput = document.getElementById(fileInputId);
+        const placeholder = uploadArea.querySelector(".upload-placeholder");
+        const previewContainer = uploadArea.querySelector(".preview-container");
+        const previewImage = uploadArea.querySelector(".preview-image");
+        const removeBtn = uploadArea.querySelector(".btn-remove");
+
+        // Click to browse
+        uploadArea.addEventListener("click", (e) => {
+          if (e.target !== removeBtn && !e.target.closest(".btn-remove")) {
+            fileInput.click();
+          }
+        });
+
+        // File input change
+        fileInput.addEventListener("change", (e) => {
+          if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+          }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          uploadArea.style.borderColor = "#667eea";
+          uploadArea.style.background = "#f0f4ff";
+        });
+
+        uploadArea.addEventListener("dragleave", (e) => {
+          e.preventDefault();
+          uploadArea.style.borderColor = "#e9ecef";
+          uploadArea.style.background = "#f8f9fa";
+        });
+
+        uploadArea.addEventListener("drop", (e) => {
+          e.preventDefault();
+          uploadArea.style.borderColor = "#e9ecef";
+          uploadArea.style.background = "#f8f9fa";
+
+          if (e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            if (file.type.startsWith("image/")) {
+              fileInput.files = e.dataTransfer.files;
+              handleFile(file);
+            } else {
+              alert("Please drop an image file");
+            }
+          }
+        });
+
+        // Remove button
+        removeBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          fileInput.value = "";
+          placeholder.style.display = "block";
+          previewContainer.style.display = "none";
+          previewImage.src = "";
+        });
+
+        function handleFile(file) {
+          if (file.size > 5 * 1024 * 1024) {
+            alert("File size must be less than 5MB");
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            previewImage.src = e.target.result;
+            placeholder.style.display = "none";
+            previewContainer.style.display = "flex";
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      // Setup all file uploads
+      setupFileUpload("candidatePhotoUpload", "candidatePhoto");
+      setupFileUpload("partyLogoUpload", "partyLogo");
+      setupFileUpload("partyLogoUrlUpload", "partyLogoUrl");
+
+      // Voter Registration Photo Handling
+      let voterPhotoData = null;
+      let cameraStream = null;
+
+      document
+        .getElementById("capturePhotoBtn")
+        .addEventListener("click", async () => {
+          try {
+            const camera = document.getElementById("voterCamera");
+            const captureButtons = document.getElementById(
+              "cameraCaptureButtons",
+            );
+
+            // Get selected camera from dropdown
+            const selectedCameraIndex = parseInt(
+              document.getElementById("cameraSelect").value,
+            );
+            console.log("Selected camera index:", selectedCameraIndex);
+
+            // Set up video constraints with selected camera
+            let videoConstraints = {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "user",
+            };
+
+            // Try to enumerate cameras and use selected one
+            try {
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              const videoDevices = devices.filter(
+                (device) => device.kind === "videoinput",
+              );
+
+              // Use the selected camera index from dropdown
+              if (videoDevices.length > selectedCameraIndex) {
+                videoConstraints.deviceId = {
+                  exact: videoDevices[selectedCameraIndex].deviceId,
+                };
+                console.log(
+                  `Using camera ${selectedCameraIndex}:`,
+                  videoDevices[selectedCameraIndex].label,
+                );
+              } else {
+                console.warn(
+                  `Camera ${selectedCameraIndex} not found, using default`,
+                );
+              }
+            } catch (enumError) {
+              console.warn(
+                "Could not enumerate devices, using default camera:",
+                enumError,
+              );
+            }
+
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+              video: videoConstraints,
+            });
+            camera.srcObject = cameraStream;
+            camera.style.display = "block";
+            captureButtons.style.display = "flex";
+            document.getElementById("photoPreview").style.display = "none";
+          } catch (error) {
+            // Fallback to any available camera
+            try {
+              cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                  width: { ideal: 1280 },
+                  height: { ideal: 720 },
+                },
+              });
+              document.getElementById("voterCamera").srcObject = cameraStream;
+              document.getElementById("voterCamera").style.display = "block";
+              document.getElementById("cameraCaptureButtons").style.display =
+                "flex";
+              document.getElementById("photoPreview").style.display = "none";
+              console.log("Using fallback camera");
+            } catch (fallbackError) {
+              showAlert(
+                "Error accessing camera: " + fallbackError.message,
+                "error",
+              );
+            }
+          }
+        });
+
+      document.getElementById("takePhotoBtn").addEventListener("click", () => {
+        const camera = document.getElementById("voterCamera");
+        const canvas = document.getElementById("photoCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = camera.videoWidth;
+        canvas.height = camera.videoHeight;
+        ctx.drawImage(camera, 0, 0);
+        voterPhotoData = canvas.toDataURL("image/jpeg");
+
+        // Show preview
+        document.getElementById("previewImage").src = voterPhotoData;
+        document.getElementById("photoPreview").style.display = "block";
+
+        // Stop camera
+        if (cameraStream) {
+          cameraStream.getTracks().forEach((track) => track.stop());
+        }
+        camera.style.display = "none";
+        document.getElementById("cameraCaptureButtons").style.display = "none";
+      });
+
+      document
+        .getElementById("cancelCameraBtn")
+        .addEventListener("click", () => {
+          if (cameraStream) {
+            cameraStream.getTracks().forEach((track) => track.stop());
+          }
+          document.getElementById("voterCamera").style.display = "none";
+          document.getElementById("cameraCaptureButtons").style.display =
+            "none";
+        });
+
+      document
+        .getElementById("uploadPhotoBtn")
+        .addEventListener("click", () => {
+          document.getElementById("photoUpload").click();
+        });
+
+      document.getElementById("photoUpload").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        console.log("File selected:", file);
+        if (file) {
+          // Validate file type
+          const validTypes = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp",
+          ];
+          const fileType = file.type.toLowerCase();
+          const fileName = file.name.toLowerCase();
+
+          // Check for HEIC/HEIF files (they often have empty type)
+          if (fileName.endsWith(".heic") || fileName.endsWith(".heif")) {
+            showAlert(
+              "❌ HEIC/HEIF format not supported. Please convert to JPG or PNG first.",
+              "error",
+            );
+            e.target.value = ""; // Clear the input
+            return;
+          }
+
+          // Validate MIME type
+          if (!validTypes.includes(fileType)) {
+            showAlert(
+              "❌ Please upload a JPG, PNG, or WebP image only.",
+              "error",
+            );
+            e.target.value = ""; // Clear the input
+            return;
+          }
+
+          // Validate file size (max 10MB)
+          if (file.size > 10 * 1024 * 1024) {
+            showAlert("❌ Image size must be less than 10MB", "error");
+            e.target.value = "";
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            voterPhotoData = event.target.result;
+            console.log("Photo data loaded, length:", voterPhotoData.length);
+            const previewImg = document.getElementById("previewImage");
+            const previewDiv = document.getElementById("photoPreview");
+            previewImg.src = voterPhotoData;
+            previewDiv.style.display = "block";
+            console.log("Preview should now be visible");
+          };
+          reader.onerror = () => {
+            showAlert("❌ Error reading image file", "error");
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      document
+        .getElementById("removePhotoBtn")
+        .addEventListener("click", () => {
+          voterPhotoData = null;
+          document.getElementById("photoPreview").style.display = "none";
+          document.getElementById("photoUpload").value = "";
+        });
+
+      // Register Voter
+      document
+        .getElementById("voterForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          try {
+            if (!voterPhotoData) {
+              showAlert("Please capture or upload a voter photo", "error");
+              return;
+            }
+
+            showLoading(true);
+            const voterData = {
+              VoterName: document.getElementById("voterName").value,
+              VoterId: document.getElementById("voterIdNum").value,
+              DateOfBirth: document.getElementById("voterDob").value,
+              District: document.getElementById("district").value,
+              AreaNo: parseInt(document.getElementById("areaNo").value),
+              photo: voterPhotoData,
+            };
+            const result = await registerVoterWithPhoto(voterData);
+            showAlert(
+              "Voter registered successfully with face data!",
+              "success",
+            );
+            document.getElementById("voterForm").reset();
+            voterPhotoData = null;
+            document.getElementById("photoPreview").style.display = "none";
+          } catch (error) {
+            // Provide helpful error messages based on the error type
+            let errorMsg = error.message;
+
+            if (error.message.includes("No face detected")) {
+              errorMsg =
+                "❌ No face detected in the image.\n\nTips for better results:\n" +
+                "• Ensure the person's face is clearly visible\n" +
+                "• Face should be facing the camera\n" +
+                "• Good lighting is important\n" +
+                "• Avoid tilting the head too much\n" +
+                "• Remove sunglasses if possible\n" +
+                "• Try uploading a different photo";
+            } else if (error.message.includes("Invalid credentials")) {
+              errorMsg =
+                "❌ Invalid voter credentials. Please check the details.";
+            } else if (error.message.includes("already voted")) {
+              errorMsg = "❌ This voter has already voted.";
+            } else if (error.message.includes("Network")) {
+              errorMsg =
+                "❌ Network error. Please check your connection and ensure all services are running.";
+            }
+
+            showAlert("Error: " + errorMsg, "error");
+          } finally {
+            showLoading(false);
+          }
+        });
+
+      // Register Candidate
+      document
+        .getElementById("candidateForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          try {
+            showLoading(true);
+
+            const formData = new FormData();
+            formData.append(
+              "candidate_name",
+              document.getElementById("candidateName").value,
+            );
+            formData.append(
+              "party_name",
+              document.getElementById("candidateParty").value,
+            );
+            formData.append(
+              "position",
+              document.getElementById("candidatePosition").value,
+            );
+            formData.append(
+              "District",
+              document.getElementById("candidateDistrict").value,
+            );
+            formData.append(
+              "AreaNo",
+              parseInt(document.getElementById("candidateAreaNo").value),
+            );
+
+            // Add files if selected
+            const candidatePhotoFile =
+              document.getElementById("candidatePhoto").files[0];
+            const partyLogoFile = document.getElementById("partyLogo").files[0];
+
+            if (candidatePhotoFile) {
+              formData.append("candidate_photo", candidatePhotoFile);
+            }
+            if (partyLogoFile) {
+              formData.append("party_logo", partyLogoFile);
+            }
+
+            const result = await registerCandidateWithFiles(formData);
+            showAlert("Candidate registered successfully!", "success");
+            document.getElementById("candidateForm").reset();
+            // Reset file upload previews
+            document
+              .querySelectorAll("#register-candidate .preview-container")
+              .forEach((el) => (el.style.display = "none"));
+            document
+              .querySelectorAll("#register-candidate .upload-placeholder")
+              .forEach((el) => (el.style.display = "block"));
+          } catch (error) {
+            showAlert("Error: " + error.message, "error");
+          } finally {
+            showLoading(false);
+          }
+        });
+
+      // Register Party
+      document
+        .getElementById("partyForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          try {
+            showLoading(true);
+
+            const formData = new FormData();
+            formData.append(
+              "party_name",
+              document.getElementById("partyName").value,
+            );
+            formData.append(
+              "District",
+              document.getElementById("partyDistrict").value,
+            );
+            formData.append(
+              "AreaNo",
+              parseInt(document.getElementById("partyAreaNo").value),
+            );
+
+            // Add file if selected
+            const partyLogoFile =
+              document.getElementById("partyLogoUrl").files[0];
+            if (partyLogoFile) {
+              formData.append("party_logo", partyLogoFile);
+            }
+
+            const result = await registerPartyWithFile(formData);
+            showAlert("Party registered successfully!", "success");
+            document.getElementById("partyForm").reset();
+            // Reset file upload preview
+            document.querySelector(
+              "#register-party .preview-container",
+            ).style.display = "none";
+            document.querySelector(
+              "#register-party .upload-placeholder",
+            ).style.display = "block";
+          } catch (error) {
+            showAlert("Error: " + error.message, "error");
+          } finally {
+            showLoading(false);
+          }
+        });
+
+      // Load all records when view-all tab is clicked
+      document
+        .querySelector('[data-tab="view-all"]')
+        .addEventListener("click", async () => {
+          try {
+            showLoading(true);
+
+            // Load voters
+            const voters = await getAllVoters();
+            displayVoters(voters.data);
+
+            // Load candidates
+            const candidates = await getAllCandidates();
+            displayCandidates(candidates.data);
+
+            // Load parties
+            const parties = await getAllParties();
+            displayParties(parties.data);
+          } catch (error) {
+            showAlert("Error loading data: " + error.message, "error");
+          } finally {
+            showLoading(false);
+          }
+        });
+
+      function displayVoters(voters) {
+        const container = document.getElementById("votersList");
+        if (voters.length === 0) {
+          container.innerHTML = "<p>No voters registered yet</p>";
+          return;
+        }
+        let html =
+          "<table><tr><th>Photo</th><th>ID</th><th>Name</th><th>Voter ID</th><th>District</th><th>Area</th><th>Face Registered</th></tr>";
+        voters.forEach((v) => {
+          let photoCell = "";
+          if (v.PhotoPath) {
+            // Display actual photo from PhotoPath
+            photoCell = `<td><img src="${v.PhotoPath}" alt="Voter Photo" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 2px solid #ddd;" onerror="this.src='/assets/placeholder-avatar.png';" /></td>`;
+          } else if (v.FaceData) {
+            // Fallback: Face data exists but no photo (legacy)
+            photoCell = `<td><div style="width: 60px; height: 60px; border-radius: 8px; background: #e9ecef; display: flex; align-items: center; justify-content: center; font-size: 24px;">👤</div></td>`;
+          } else {
+            // No photo or face data
+            photoCell = `<td><div style="width: 60px; height: 60px; border-radius: 8px; background: #f8d7da; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #721c24;">❌</div></td>`;
+          }
+          const faceStatus = v.FaceData ? "✅ Yes" : "❌ No";
+          html += `<tr>${photoCell}<td>${v.id}</td><td>${v.VoterName}</td><td>${v.VoterId}</td><td>${v.District}</td><td>${v.AreaNo}</td><td>${faceStatus}</td></tr>`;
+        });
+        html += "</table>";
+        container.innerHTML = html;
+      }
+
+      function displayCandidates(candidates) {
+        const container = document.getElementById("candidatesList");
+        if (candidates.length === 0) {
+          container.innerHTML = "<p>No candidates registered yet</p>";
+          return;
+        }
+        let html =
+          "<table><tr><th>ID</th><th>Name</th><th>Party</th><th>Position</th><th>District</th><th>Area</th></tr>";
+        candidates.forEach((c) => {
+          html += `<tr><td>${c.id}</td><td>${c.CandidateName}</td><td>${c.CandidateParty}</td><td>${c.CandidatePosition}</td><td>${c.District}</td><td>${c.AreaNo}</td></tr>`;
+        });
+        html += "</table>";
+        container.innerHTML = html;
+      }
+
+      function displayParties(parties) {
+        const container = document.getElementById("partiesList");
+        if (parties.length === 0) {
+          container.innerHTML = "<p>No parties registered yet</p>";
+          return;
+        }
+        let html =
+          "<table><tr><th>ID</th><th>Party Name</th><th>District</th><th>Area</th></tr>";
+        parties.forEach((p) => {
+          html += `<tr><td>${p.id}</td><td>${p.PartyName}</td><td>${p.District}</td><td>${p.AreaNo}</td></tr>`;
+        });
+        html += "</table>";
+        container.innerHTML = html;
+      }
+
+      // Blockchain Data Viewer Functions
+      let blockchainData = {
+        candidates: [],
+        parties: [],
+        votes: [],
+      };
+
+      async function fetchBlockchainData() {
+        try {
+          showLoading(true);
+
+          // Fetch blockchain data from API
+          const [candidatesRes, partiesRes, votesRes, votersRes] =
+            await Promise.all([
+              fetch(`${API_BASE_URL}/candidates/results`),
+              fetch(`${API_BASE_URL}/parties/results`),
+              fetch(`${API_BASE_URL}/votes/history`),
+              fetch(`${API_BASE_URL}/voters/count`),
+            ]);
+
+          const candidatesData = await candidatesRes.json();
+          const partiesData = await partiesRes.json();
+          const votesData = await votesRes.json();
+          const votersData = await votersRes.json();
+
+          // Store data
+          blockchainData.candidates = candidatesData.data || [];
+          blockchainData.parties = partiesData.data || [];
+          blockchainData.votes = votesData.data || [];
+
+          // Display statistics
+          document.getElementById("blockchainStats").style.display = "block";
+          document.getElementById("totalVoters").textContent =
+            votersData.totalVoters || 0;
+          document.getElementById("totalCandidates").textContent =
+            blockchainData.candidates.length;
+          document.getElementById("totalVotes").textContent =
+            blockchainData.candidates.reduce(
+              (sum, c) => sum + (c.voteCount || 0),
+              0,
+            );
+          document.getElementById("totalParties").textContent =
+            blockchainData.parties.length;
+
+          // Populate district and area filters
+          populateFilters();
+
+          // Display tables
+          displayCandidateVotes(blockchainData.candidates);
+          displayPartyVotes(blockchainData.parties);
+          displayVoteDetails(blockchainData.votes);
+
+          // Show filters
+          document.getElementById("blockchainFilters").style.display = "flex";
+
+          showAlert("Blockchain data fetched successfully!", "success");
+        } catch (error) {
+          showAlert(
+            "Error fetching blockchain data: " + error.message,
+            "error",
+          );
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      function populateFilters() {
+        const districts = new Set();
+        const areas = new Set();
+
+        blockchainData.candidates.forEach((c) => {
+          if (c.district) districts.add(c.district);
+          if (c.areaNo) areas.add(c.areaNo);
+        });
+
+        const districtSelect = document.getElementById("filterDistrict");
+        const areaSelect = document.getElementById("filterArea");
+
+        districtSelect.innerHTML = '<option value="">All Districts</option>';
+        areaSelect.innerHTML = '<option value="">All Areas</option>';
+
+        // Always show areas 1-10
+        for (let i = 1; i <= 10; i++) {
+          areaSelect.innerHTML += `<option value="${i}">Area ${i}</option>`;
+        }
+
+        Array.from(districts)
+          .sort()
+          .forEach((d) => {
+            districtSelect.innerHTML += `<option value="${d}">${d}</option>`;
+          });
+      }
+
+      function applyBlockchainFilters() {
+        const district = document.getElementById("filterDistrict").value;
+        const area = document.getElementById("filterArea").value;
+
+        let filteredCandidates = blockchainData.candidates;
+        let filteredParties = blockchainData.parties;
+
+        if (district) {
+          filteredCandidates = filteredCandidates.filter(
+            (c) => c.district === district,
+          );
+          filteredParties = filteredParties.filter(
+            (p) => p.district === district,
+          );
+        }
+
+        if (area) {
+          filteredCandidates = filteredCandidates.filter(
+            (c) => c.areaNo == area,
+          );
+          filteredParties = filteredParties.filter((p) => p.areaNo == area);
+        }
+
+        displayCandidateVotes(filteredCandidates);
+        displayPartyVotes(filteredParties);
+      }
+
+      function displayCandidateVotes(candidates) {
+        const tbody = document.getElementById("candidateVotesBody");
+        const table = document.getElementById("candidateVotesTable");
+
+        if (candidates.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" style="text-align: center; color: #666;">No candidates found</td></tr>';
+          table.style.display = "block";
+          return;
+        }
+
+        let html = "";
+        candidates.forEach((c, index) => {
+          html += `
+            <tr>
+              <td>${index}</td>
+              <td>${c.name || "N/A"}</td>
+              <td>${c.party || "N/A"}</td>
+              <td>${c.position || "N/A"}</td>
+              <td>${c.district || "N/A"}</td>
+              <td>${c.areaNo || "N/A"}</td>
+              <td><strong style="color: #28a745;">${
+                c.voteCount || 0
+              }</strong></td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = html;
+        table.style.display = "block";
+      }
+
+      function displayPartyVotes(parties) {
+        const tbody = document.getElementById("partyVotesBody");
+        const table = document.getElementById("partyVotesTable");
+
+        if (parties.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" style="text-align: center; color: #666;">No parties found</td></tr>';
+          table.style.display = "block";
+          return;
+        }
+
+        let html = "";
+        parties.forEach((p, index) => {
+          html += `
+            <tr>
+              <td>${index}</td>
+              <td>${p.partyName || "N/A"}</td>
+              <td>${p.district || "N/A"}</td>
+              <td>${p.areaNo || "N/A"}</td>
+              <td><strong style="color: #28a745;">${
+                p.voteCount || 0
+              }</strong></td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = html;
+        table.style.display = "block";
+      }
+
+      function displayVoteDetails(votes) {
+        const tbody = document.getElementById("voteDetailsBody");
+        const table = document.getElementById("voteDetailsTable");
+
+        if (votes.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" style="text-align: center; color: #666;">No votes found</td></tr>';
+          table.style.display = "block";
+          return;
+        }
+
+        let html = "";
+        votes.forEach((v) => {
+          const voteTime = v.VoteTime
+            ? new Date(v.VoteTime).toLocaleString()
+            : "N/A";
+          const txHash = v.TransactionHash
+            ? v.TransactionHash.substring(0, 10) + "..."
+            : "N/A";
+          html += `
+            <tr>
+              <td>${v.VoterId || "N/A"}</td>
+              <td>${v.CandidateId || "N/A"}</td>
+              <td>${v.District || "N/A"}</td>
+              <td>${v.AreaNo || "N/A"}</td>
+              <td>${voteTime}</td>
+              <td><code style="font-size: 11px;">${txHash}</code></td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = html;
+        table.style.display = "block";
+      }
+
+      function clearBlockchainData() {
+        document.getElementById("blockchainStats").style.display = "none";
+        document.getElementById("candidateVotesTable").style.display = "none";
+        document.getElementById("partyVotesTable").style.display = "none";
+        document.getElementById("voteDetailsTable").style.display = "none";
+        document.getElementById("blockchainFilters").style.display = "none";
+        document.getElementById("contractAddress").value = "";
+        blockchainData = { candidates: [], parties: [], votes: [] };
+        showAlert("Blockchain data cleared", "success");
+      }
+
+      // Sync candidates to blockchain
+      async function syncCandidatesToBlockchain() {
+        if (
+          !confirm(
+            "This will register all candidates with null BlockchainId to the blockchain. Make sure Ganache is running. Continue?",
+          )
+        ) {
+          return;
+        }
+
+        const loadingDiv = document.getElementById("loading");
+        loadingDiv.style.display = "block";
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/candidates/sync-blockchain`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            showAlert(data.message, "success");
+
+            // Show detailed results
+            if (data.results && data.results.length > 0) {
+              let details = "\n\nDetails:\n";
+              data.results.forEach((result) => {
+                if (result.success) {
+                  details += `✅ ${result.name} (DB ID: ${result.candidateId}) → Blockchain ID: ${result.blockchainId}\n`;
+                } else {
+                  details += `❌ ${result.name} (DB ID: ${result.candidateId}) → ${result.error}\n`;
+                }
+              });
+              console.log(details);
+            }
+
+            // Reload candidates list
+            loadAllData();
+          } else {
+            showAlert(data.message || "Failed to sync candidates", "error");
+          }
+        } catch (error) {
+          console.error("Error syncing candidates:", error);
+          showAlert("Error: " + error.message, "error");
+        } finally {
+          loadingDiv.style.display = "none";
+        }
+      }
+    </script>
+  </body>
+</html>
